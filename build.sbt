@@ -23,7 +23,7 @@ mainClass in assembly := Some("com.today.agent.Main")
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.17",
   "com.google.code.gson" % "gson" % "2.3.1",
-  "com.corundumstudio.socketio" % "netty-socketio" % "1.7.12",
+  //"com.corundumstudio.socketio" % "netty-socketio" % "1.7.12",
   "io.socket" % "socket.io-client" % "0.8.1",
   "com.github.wangzaixiang" %% "scala-sql" % "2.0.6"
 )
