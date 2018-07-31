@@ -1,5 +1,7 @@
 package com.today.agent.enums
 
+import wangzx.scala_commons.sql.{DbEnum, DbEnumJdbcValueAccessor}
+
 class EventType private(val id: Int, val name: String) extends DbEnum {
   override def toString(): String = "(" + id + "," + name + ")"
 

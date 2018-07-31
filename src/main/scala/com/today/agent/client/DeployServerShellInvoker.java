@@ -1,7 +1,7 @@
 package com.today.agent.client;
 
 import com.github.dapeng.socket.SystemParas;
-import com.github.dapeng.socket.enums.EventType;
+import com.today.agent.enums.EventType;
 import io.socket.client.Socket;
 
 import java.io.BufferedReader;
