@@ -3,14 +3,13 @@ package com.today.agent
 import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
+import com.github.dapeng.socket.entity.DeployVo
+import com.github.dapeng.socket.enums.EventType
 import com.google.gson.Gson
 import com.today.agent.client.{CmdExecutor, DeployServerShellInvoker}
-import com.today.agent.entity.DeployVo
-import com.today.agent.enums.EventType
 import com.today.agent.listener.{DeployServerOperations, ServerTimeOperations}
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
-import org.yaml.snakeyaml.{DumperOptions, Yaml}
 
 import scala.io.Source
 

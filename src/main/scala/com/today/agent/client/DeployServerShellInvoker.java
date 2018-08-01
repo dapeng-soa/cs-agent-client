@@ -1,7 +1,7 @@
 package com.today.agent.client;
 
 import com.github.dapeng.socket.SystemParas;
-import com.today.agent.enums.EventType;
+import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;
 
 import java.io.BufferedReader;
@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import static com.github.dapeng.socket.SystemParas.COMMAS;
 import static com.github.dapeng.socket.SystemParas.SHELLNAME;
 
+
 /**
  * @author duwupeng on 2016-08-10
  */
@@ -20,8 +21,6 @@ public class DeployServerShellInvoker {
     public static void executeShell(Socket socket, String event) throws Exception {
         BufferedReader br = null;
         BufferedWriter wr = null;
-        BufferedWriter bw = null;
-
 
         boolean isPs = false;
         if (event.equalsIgnoreCase(SystemParas.AllowedCopmmand.SERVICES.name())) {
@@ -107,10 +106,6 @@ public class DeployServerShellInvoker {
                 br.close();
             if (wr != null)
                 wr.close();
-            if (bw != null) {
-                bw.flush();
-                bw.close();
-            }
         }
     }
 
