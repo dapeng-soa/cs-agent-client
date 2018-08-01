@@ -47,9 +47,9 @@ object Main {
       }
     }).on(EventType.DEPLOY.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
-        val voString = objects(0).asInstanceOf[String];
+        val voString = objects(0).asInstanceOf[String]
         val vo = new Gson().fromJson(voString, classOf[DeployVo])
-        val yamlDir = new File(new File(classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()), "yamlDir");
+        val yamlDir = new File(new File(classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()), "yamlDir")
         if (!yamlDir.exists()) {
           yamlDir.mkdir();
         }
@@ -58,7 +58,7 @@ object Main {
         yamlFile.setLastModified(vo.getLastModifyTime)
         val writer = new FileWriter(yamlFile)
         try {
-          val finalContent = Source.fromString(vo.getFileContent)
+          val finalContent = Source.fromString(vo.getFileContent).getLines().filterNot(_.startsWith("!!")).filterNot(_.contains("null"))
           finalContent.foreach(i => {
             writer.write(i)
             writer.write("\n")
