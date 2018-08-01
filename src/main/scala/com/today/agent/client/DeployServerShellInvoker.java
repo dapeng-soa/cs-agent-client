@@ -28,12 +28,11 @@ public class DeployServerShellInvoker {
             Runtime runtime = Runtime.getRuntime();
             Process process;
 
-            String oriCmd = null;
+            String oriCmd = event.split(" ")[0];
             String[] cmd = null;
             String realCmd = null;
             if (event.indexOf(COMMAS) != -1) {
                 realCmd = SHELLNAME + event.replaceAll(COMMAS, " ").replace("*", "");
-                oriCmd = event.split(COMMAS)[0];
             } else {
                 realCmd = SHELLNAME + " " + event;
             }

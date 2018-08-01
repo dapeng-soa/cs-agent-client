@@ -7,7 +7,7 @@ import com.github.dapeng.socket.entity.DeployVo
 import com.github.dapeng.socket.enums.EventType
 import com.google.gson.Gson
 import com.today.agent.client.{CmdExecutor, DeployServerShellInvoker}
-import com.today.agent.listener.{DeployServerOperations, ServerTimeOperations}
+import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
 
@@ -38,9 +38,11 @@ object Main {
 
         socketClient.emit(EventType.NODE_REG.name, "app1:127.0.0.1")
       }
-    }).on(EventType.GET_SERVER_TIME.name, new ServerTimeOperations(queue,socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+    }).on(EventType.GET_SERVER_TIME.name,  new Emitter.Listener() {
       override def call( args: AnyRef*) {
-        println(" disconnected ........")
+        val serviceName = args(0)
+        val cmd = s"${EventType.GET_SERVER_TIME.name} $serviceName"
+        queue.put(cmd)
       }
     }).on("webCmd", new DeployServerOperations(queue,socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
       override def call( args: AnyRef*) {

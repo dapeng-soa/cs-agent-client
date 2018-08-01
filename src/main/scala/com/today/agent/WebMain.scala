@@ -26,5 +26,7 @@ object WebMain {
         socketClient.emit(EventType.GET_SERVER_TIME.name, "hello")
       }
     })
+
+    socketClient.connect()
   }
 }
