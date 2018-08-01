@@ -1,5 +1,6 @@
 package com.today.agent.client;
 
+import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;
 
 import java.util.concurrent.BlockingQueue;
@@ -22,11 +23,11 @@ public class CmdExecutor implements Runnable{
                     String  event = (String)queue.take();
                     System.out.println("Consumed Event " + event);
 
-                    socket.emit("nodeEvent","started");
+                    socket.emit(EventType.NODE_EVENT().name(),"started");
 
                     DeployServerShellInvoker.executeShell(socket, event);
 
-                    socket.emit("nodeEvent","end");
+                    socket.emit(EventType.NODE_EVENT().name(),"end");
                 } catch (Exception ex) {
                    ex.printStackTrace();
                 }

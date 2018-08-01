@@ -1,5 +1,6 @@
 package com.today.agent.listener;
 
+import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
@@ -18,7 +19,7 @@ public class ServerTimeOperations implements Emitter.Listener {
         try{
             String serviceName = (String)objects[0];
 
-            queue.put("getServerTime " + serviceName);
+            queue.put(EventType.GET_SERVER_TIME().name() + " " + serviceName);
         }catch (Exception e){
             e.printStackTrace();
         }

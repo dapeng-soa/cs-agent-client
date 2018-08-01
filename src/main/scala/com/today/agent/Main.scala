@@ -17,6 +17,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
+    //fixme
     if (args == null || args.length < 2) {
 
     }
@@ -75,6 +76,13 @@ object Main {
         val cmd = s"${EventType.DEPLOY.name.toLowerCase()} -f ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml up -d"
         queue.put(cmd)
       }
+    }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener{
+      override def call(objects: AnyRef*): Unit = {
+        val serviceName = objects(0)
+        val cmd = s"${EventType.GET_YAML_FILE.name} ${serviceName}.yml"
+        queue.put(cmd)
+      }
+
     })
 
     socketClient.connect()
