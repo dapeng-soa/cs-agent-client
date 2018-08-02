@@ -1,6 +1,6 @@
 import java.io.{FileInputStream, FileOutputStream}
 
-name := "source-compose"
+name := "agent_bash"
 
 version := "1.0"
 
