@@ -28,7 +28,7 @@ public class DeployServerShellInvoker {
             Runtime runtime = Runtime.getRuntime();
             Process process;
 
-            String oriCmd = event.split(" ")[0];
+
             String[] cmd = null;
             String realCmd = null;
             if (event.indexOf(COMMAS) != -1) {
@@ -36,7 +36,7 @@ public class DeployServerShellInvoker {
             } else {
                 realCmd = SHELLNAME + " " + event;
             }
-            System.out.println("oriCmd:" + oriCmd);
+
             System.out.println("realCmd: " + realCmd);
             cmd = new String[]{"/bin/sh", "-c", realCmd};
 
@@ -49,7 +49,7 @@ public class DeployServerShellInvoker {
 
             String inline;
             while ((inline = br.readLine()) != null) {
-                processInlineToSendEvent(oriCmd, socket, inline);
+                processInlineToSendEvent(event, socket, inline);
                 System.out.println(inline);
             }
             br.close();
@@ -74,8 +74,13 @@ public class DeployServerShellInvoker {
     }
 
     private static void processInlineToSendEvent(String oriEvent, Socket socket, String inline) {
-        if (EventType.GET_SERVER_TIME().name().equals(oriEvent)) {
-            socket.emit(EventType.SERVER_TIME().name(), socket.id() + ":" + inline);
+        System.out.println(" agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline );
+
+        String[] args = oriEvent.split(" ");
+        String oriCmd = args[0];
+        if (EventType.GET_SERVER_TIME().name().equals(oriCmd)) {
+            String serviceName = args[1];
+            socket.emit(EventType.GET_SERVER_TIME_RESP().name(), socket.id() + ":" + serviceName + ":" + inline);
         } else {
             socket.emit(EventType.WEB_EVENT().name(), inline);
         }
