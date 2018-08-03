@@ -25,7 +25,7 @@ object Main {
     val opts = new IO.Options()
     opts.forceNew = true
 
-    val socketClient: Socket = IO.socket("http://127.0.0.1:9095", opts)
+    val socketClient: Socket = IO.socket("http://192.168.4.148:9095", opts)
 
     val queue = new LinkedBlockingQueue[String]()
     val cmdExecutor = new CmdExecutor(queue, socketClient)
@@ -36,7 +36,8 @@ object Main {
       override def call(args: AnyRef*): Unit = {
         println(s" connected......clientId: ${socketClient.id()}...")
 
-        socketClient.emit(EventType.NODE_REG.name, "app1:127.0.0.1")
+
+        socketClient.emit(EventType.NODE_REG.name, "app1:192.168.0.109")
       }
     }).on(EventType.GET_SERVER_TIME.name,  new Emitter.Listener() {
       override def call( args: AnyRef*) {
@@ -75,7 +76,7 @@ object Main {
         }
 
         //exec cmd.....
-        val cmd = s"${EventType.DEPLOY.name.toLowerCase()} -f ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml up -d"
+        val cmd = s"${EventType.DEPLOY.name.toLowerCase()} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
         queue.put(cmd)
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener{
