@@ -2,7 +2,7 @@
 
 getServerTime(){
    #echo "received serviceName: $1"
-   ip=$(ifconfig enp3s0|grep "inet "|awk '{print $2}')
+   ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
     if [ -f "$1" ];then
         echo "$ip:"`stat -c %Y $1`
     else
@@ -22,19 +22,23 @@ deploy() {
 }
 
 stop() {
-  ip=$(ifconfig enp3s0|grep "inet "|awk '{print $2}')
+  ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
   echo $@
   echo " $ip stopping $1"
   docker stop $1
 }
 
 restart() {
-   ip=$(ifconfig enp3s0|grep "inet "|awk '{print $2}')
+   ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
    echo " $ip restarting $1"
   docker restart $1
 }
 
+getYamlFile() {
+   cat $1
+}
+
 case $1 in
-   "getServerTime" | "deploy" | "stop" | "restart") eval $@ ;;
+   "getServerTime" | "deploy" | "stop" | "restart" |"getYamlFile") eval $@ ;;
    *) echo "invalid command $1" ;;
 esac

@@ -1,6 +1,5 @@
 package com.today.agent.client;
 
-import com.github.dapeng.socket.SystemParas;
 import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;
 
@@ -81,7 +80,9 @@ public class DeployServerShellInvoker {
         if (EventType.GET_SERVER_TIME().name().equals(oriCmd)) {
             String serviceName = args[1];
             socket.emit(EventType.GET_SERVER_TIME_RESP().name(), socket.id() + ":" + serviceName + ":" + inline);
-        } else {
+        } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())){
+            socket.emit(EventType.GET_YAML_FILE_RESP().name(), inline);
+        }else {
             socket.emit(EventType.NODE_EVENT().name(), inline);
         }
     }

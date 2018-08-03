@@ -17,15 +17,19 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    //fixme
-    if (args == null || args.length < 2) {
+    var serverUrl = "http://127.0.0.1:9095"
+    var registerInfo = "app1:192.168.0.109"
 
+    //fixme 获取agent主机真实ip
+    if (args != null && args.length >= 2) {
+      serverUrl = args.head
+      registerInfo = args(1)
     }
 
     val opts = new IO.Options()
     opts.forceNew = true
 
-    val socketClient: Socket = IO.socket("http://192.168.4.148:9095", opts)
+    val socketClient: Socket = IO.socket(serverUrl, opts)
 
     val queue = new LinkedBlockingQueue[String]()
     val cmdExecutor = new CmdExecutor(queue, socketClient)
@@ -81,8 +85,9 @@ object Main {
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener{
       override def call(objects: AnyRef*): Unit = {
-        val serviceName = objects(0)
-        val cmd = s"${EventType.GET_YAML_FILE.name} ${serviceName}.yml"
+        val deployVoJson = objects(0).asInstanceOf[String]
+        val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val cmd = s"${EventType.GET_YAML_FILE.name} ${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir/${deployRequest.getServiceName}.yml"
         queue.put(cmd)
       }
 
