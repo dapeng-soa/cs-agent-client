@@ -1,9 +1,10 @@
 #!/bin/bash
+
 getServerTime(){
    #echo "received serviceName: $1"
    ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
-    if [ -f "/data/test" ];then
-        echo "$ip:"`stat -c %Y /data/test`
+    if [ -f "$1" ];then
+        echo "$ip:"`stat -c %Y $1`
     else
         echo "$ip:"0
     fi
@@ -18,6 +19,18 @@ deploy() {
   else
     `docker-compose -f $ymlFile up -d`
   fi
+}
+
+stop() {
+  ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
+  echo " $ip stopping $1"
+ `docker stop $1`
+}
+
+restart() {
+   ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
+   echo " $ip restarting $1"
+  `docker restart $1`
 }
 
 case $1 in

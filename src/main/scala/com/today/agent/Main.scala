@@ -3,7 +3,7 @@ package com.today.agent
 import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
-import com.github.dapeng.socket.entity.DeployVo
+import com.github.dapeng.socket.entity.{DeployRequest, DeployVo}
 import com.github.dapeng.socket.enums.EventType
 import com.google.gson.Gson
 import com.today.agent.client.{CmdExecutor, DeployServerShellInvoker}
@@ -85,6 +85,20 @@ object Main {
         queue.put(cmd)
       }
 
+    }).on(EventType.STOP.name, new Emitter.Listener{
+      override def call(objects: AnyRef*): Unit = {
+        val deployVoJson = objects(0).asInstanceOf[String]
+        val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val cmd = s"stop ${deployRequest.getServiceName}"
+        queue.put(cmd)
+      }
+    }).on(EventType.RESTART.name, new Emitter.Listener{
+      override def call(objects: AnyRef*): Unit = {
+        val deployVoJson = objects(0).asInstanceOf[String]
+        val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val cmd = s"restart ${deployRequest.getServiceName}"
+        queue.put(cmd)
+      }
     })
 
     socketClient.connect()
