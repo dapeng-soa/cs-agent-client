@@ -82,7 +82,7 @@ public class DeployServerShellInvoker {
             String serviceName = args[1];
             socket.emit(EventType.GET_SERVER_TIME_RESP().name(), socket.id() + ":" + serviceName + ":" + inline);
         } else {
-            socket.emit(EventType.WEB_EVENT().name(), inline);
+            socket.emit(EventType.NODE_EVENT().name(), inline);
         }
     }
 
