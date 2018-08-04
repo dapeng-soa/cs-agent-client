@@ -55,6 +55,7 @@ public class DeployServerShellInvoker {
 
             br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((inline = br.readLine()) != null) {
+                processInlineToSendEvent(EventType.NODE_EVENT().name(), socket, inline);
                 System.out.println(inline);
             }
 

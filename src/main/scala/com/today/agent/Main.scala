@@ -46,7 +46,7 @@ object Main {
     }).on(EventType.GET_SERVER_TIME.name,  new Emitter.Listener() {
       override def call( args: AnyRef*) {
         val serviceName = args(0)
-        val cmd = s"${EventType.GET_SERVER_TIME.name} $serviceName"
+        val cmd = s"${EventType.GET_SERVER_TIME.name} ${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir/$serviceName.yml"
         queue.put(cmd)
       }
     }).on("webCmd", new DeployServerOperations(queue,socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
