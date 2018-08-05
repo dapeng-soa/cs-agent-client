@@ -23,12 +23,12 @@ public class CmdExecutor implements Runnable{
                     String  event = (String)queue.take();
                     System.out.println("Consumed Event " + event);
 
-                    socket.emit(EventType.NODE_EVENT().name(),"started");
+                    socket.emit(EventType.NODE_EVENT().name(),"[started]");
                     socket.emit(EventType.NODE_EVENT().name(), event);
 
                     DeployServerShellInvoker.executeShell(socket, event);
 
-                    socket.emit(EventType.NODE_EVENT().name(),"end");
+                    socket.emit(EventType.NODE_EVENT().name(),"[end]");
                 } catch (Exception ex) {
                    ex.printStackTrace();
                 }
