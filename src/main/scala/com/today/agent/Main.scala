@@ -1,6 +1,6 @@
 package com.today.agent
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.concurrent.LinkedBlockingQueue
 
 import com.github.dapeng.socket.entity.{DeployRequest, DeployVo}
@@ -31,7 +31,16 @@ object Main {
     println(s"connect serverUrl:$serverUrl")
     println(s"registerInfo:$registerInfo")
 
-    val yamlFileDir = s"${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir"
+    //TODO 测试
+    //println(classOf[DeployServerShellInvoker].getClassLoader.getResource("./"))
+    //val yamlFileDir = s"${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir"
+    //TODO jar包运行
+    val path: String = System.getProperty("java.class.path")
+    import java.io.File
+    val firstIndex = path.lastIndexOf(System.getProperty("path.separator")) + 1
+    val lastIndex = path.lastIndexOf(File.separator) + 1
+    val yamlFileDir = path.substring(firstIndex, lastIndex)
+    println(s"yamlFileDir:$yamlFileDir")
 
     val opts = new IO.Options()
     opts.forceNew = true
@@ -53,7 +62,7 @@ object Main {
     }).on(EventType.GET_SERVER_TIME.name, new Emitter.Listener() {
       override def call(args: AnyRef*) {
         val serviceName = args(0)
-        val cmd = s"${EventType.GET_SERVER_TIME.name} $yamlFileDir/$serviceName.yml"
+        val cmd = s"${EventType.GET_SERVER_TIME.name} $yamlFileDir$serviceName.yml"
         queue.put(cmd)
       }
     }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
