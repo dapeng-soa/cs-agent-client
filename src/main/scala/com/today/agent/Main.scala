@@ -18,13 +18,14 @@ object Main {
   def main(args: Array[String]): Unit = {
 
     var serverUrl = "http://127.0.0.1:9095"
-    var registerInfo = "app1:192.168.0.109"
+    val registerInfo = s"${IPUtils.nodeName}:${IPUtils.localIp}"
 
-    //fixme 获取agent主机真实ip
-    if (args != null && args.length >= 2) {
+    if (args != null && args.length >= 1) {
       serverUrl = args.head
-      registerInfo = args(1)
     }
+
+    println(s"connect serverUrl:$serverUrl")
+    println(s"registerInfo:$registerInfo")
 
     val opts = new IO.Options()
     opts.forceNew = true
@@ -41,7 +42,7 @@ object Main {
         println(s" connected......clientId: ${socketClient.id()}...")
 
 
-        socketClient.emit(EventType.NODE_REG.name, "app1:192.168.0.109")
+        socketClient.emit(EventType.NODE_REG.name, registerInfo)
       }
     }).on(EventType.GET_SERVER_TIME.name,  new Emitter.Listener() {
       override def call( args: AnyRef*) {
