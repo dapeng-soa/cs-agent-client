@@ -79,7 +79,9 @@ public class DeployServerShellInvoker {
         String[] args = oriEvent.split(" ");
         String oriCmd = args[0];
         if (EventType.GET_SERVER_TIME().name().equals(oriCmd)) {
-            String serviceName = args[1];
+            String serviceName = args[1].replace(".yml","");
+            serviceName = serviceName.replace(".yml","");
+            serviceName = serviceName.substring(serviceName.lastIndexOf("/")+1);
             socket.emit(EventType.GET_SERVER_TIME_RESP().name(), socket.id() + ":" + serviceName + ":" + inline);
         } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())){
             socket.emit(EventType.GET_YAML_FILE_RESP().name(), inline);
