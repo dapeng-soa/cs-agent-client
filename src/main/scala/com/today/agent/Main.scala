@@ -18,15 +18,20 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    var serverUrl = "http://127.0.0.1:9095"
+    var serverUrl = "" //http://127.0.0.1:6886
     val registerInfo = s"${IPUtils.nodeName}:${IPUtils.localIp}"
 
     if (args != null && args.length >= 1) {
       serverUrl = args.head
+    } else {
+      println("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
+      System.exit(1)
     }
 
     println(s"connect serverUrl:$serverUrl")
     println(s"registerInfo:$registerInfo")
+
+    val yamlFileDir = s"${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir"
 
     val opts = new IO.Options()
     opts.forceNew = true
@@ -45,14 +50,14 @@ object Main {
 
         socketClient.emit(EventType.NODE_REG.name, registerInfo)
       }
-    }).on(EventType.GET_SERVER_TIME.name,  new Emitter.Listener() {
-      override def call( args: AnyRef*) {
+    }).on(EventType.GET_SERVER_TIME.name, new Emitter.Listener() {
+      override def call(args: AnyRef*) {
         val serviceName = args(0)
-        val cmd = s"${EventType.GET_SERVER_TIME.name} ${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir/$serviceName.yml"
+        val cmd = s"${EventType.GET_SERVER_TIME.name} $yamlFileDir/$serviceName.yml"
         queue.put(cmd)
       }
-    }).on("webCmd", new DeployServerOperations(queue,socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
-      override def call( args: AnyRef*) {
+    }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+      override def call(args: AnyRef*) {
         println(" disconnected ........")
       }
     }).on(EventType.DEPLOY.name, new Emitter.Listener {
@@ -61,7 +66,7 @@ object Main {
         val vo = new Gson().fromJson(voString, classOf[DeployVo])
         val yamlDir = new File(new File(classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()), "yamlDir")
         if (!yamlDir.exists()) {
-          yamlDir.mkdir();
+          yamlDir.mkdir()
         }
 
         val yamlFile = new File(yamlDir.getAbsolutePath, s"${vo.getServiceName}.yml")
@@ -85,22 +90,22 @@ object Main {
         val cmd = s"${EventType.DEPLOY.name.toLowerCase()} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
         queue.put(cmd)
       }
-    }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener{
+    }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val cmd = s"${EventType.GET_YAML_FILE.name} ${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir/${deployRequest.getServiceName}.yml"
+        val cmd = s"${EventType.GET_YAML_FILE.name} $yamlFileDir${deployRequest.getServiceName}.yml"
         queue.put(cmd)
       }
 
-    }).on(EventType.STOP.name, new Emitter.Listener{
+    }).on(EventType.STOP.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"stop ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
-    }).on(EventType.RESTART.name, new Emitter.Listener{
+    }).on(EventType.RESTART.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
