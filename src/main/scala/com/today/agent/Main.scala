@@ -85,7 +85,6 @@ object Main {
         }
 
         val yamlFile = new File(yamlDir.getAbsolutePath, s"${vo.getServiceName}.yml")
-        yamlFile.setLastModified(vo.getLastModifyTime)
         val writer = new FileWriter(yamlFile)
         try {
           val finalContent = Source.fromString(vo.getFileContent).getLines().filterNot(_.startsWith("!!")).filterNot(_.contains("null"))
@@ -93,8 +92,10 @@ object Main {
             writer.write(i)
             writer.write("\n")
           })
-
-          writer.flush();
+          writer.flush()
+          println(s"set service ${vo.getServiceName} LastModifyTime is:${vo.getLastModifyTime}")
+          yamlFile.setLastModified(vo.getLastModifyTime)
+          //yamlFile.setReadOnly()
         } catch {
           case e: Exception => println(s" failed to write file.......${e.getMessage}")
         } finally {
