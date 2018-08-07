@@ -1,13 +1,13 @@
 package com.today.agent
 
-import java.io.FileWriter
+import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
 import com.github.dapeng.socket.entity.{DeployRequest, DeployVo}
 import com.github.dapeng.socket.enums.EventType
 import com.github.dapeng.socket.util.IPUtils
 import com.google.gson.Gson
-import com.today.agent.client.{CmdExecutor, DeployServerShellInvoker}
+import com.today.agent.client.CmdExecutor
 import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
@@ -34,13 +34,19 @@ object Main {
     //TODO 测试
     //println(classOf[DeployServerShellInvoker].getClassLoader.getResource("./"))
     //val yamlFileDir = s"${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir"
+
     //TODO jar包运行
-    val path: String = System.getProperty("java.class.path")
-    import java.io.File
-    val firstIndex = path.lastIndexOf(System.getProperty("path.separator")) + 1
-    val lastIndex = path.lastIndexOf(File.separator) + 1
-    val yamlFileDir = path.substring(firstIndex, lastIndex)
-    println(s"yamlFileDir:$yamlFileDir")
+    import java.io.UnsupportedEncodingException
+    var jarWholePath = this.getClass.getProtectionDomain.getCodeSource.getLocation.getFile
+    try
+      jarWholePath = java.net.URLDecoder.decode(jarWholePath, "UTF-8")
+    catch {
+      case e: UnsupportedEncodingException =>
+        println(s"get jar basePath error:$e")
+    }
+    val basePath = new File(jarWholePath).getParentFile.getAbsolutePath
+    println(s"basePath:$basePath")
+    val yamlFileDir = "yamlDir"
 
     val opts = new IO.Options()
     opts.forceNew = true
@@ -62,7 +68,7 @@ object Main {
     }).on(EventType.GET_SERVER_TIME.name, new Emitter.Listener() {
       override def call(args: AnyRef*) {
         val serviceName = args(0)
-        val cmd = s"${EventType.GET_SERVER_TIME.name} $yamlFileDir$serviceName.yml"
+        val cmd = s"${EventType.GET_SERVER_TIME.name} $basePath/$yamlFileDir/$serviceName.yml"
         queue.put(cmd)
       }
     }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -73,7 +79,7 @@ object Main {
       override def call(objects: AnyRef*): Unit = {
         val voString = objects(0).asInstanceOf[String]
         val vo = new Gson().fromJson(voString, classOf[DeployVo])
-        val yamlDir = new File(new File(classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()), "yamlDir")
+        val yamlDir = new File(new File(basePath), yamlFileDir)
         if (!yamlDir.exists()) {
           yamlDir.mkdir()
         }
@@ -103,7 +109,7 @@ object Main {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val cmd = s"${EventType.GET_YAML_FILE.name} $yamlFileDir${deployRequest.getServiceName}.yml"
+        val cmd = s"${EventType.GET_YAML_FILE.name} $basePath/$yamlFileDir/${deployRequest.getServiceName}.yml"
         queue.put(cmd)
       }
 
