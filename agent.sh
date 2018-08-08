@@ -34,6 +34,9 @@ restartResp() {
   docker restart $1
 }
 
+getYamlFileResp() {
+   cat $1
+}
 getYamlFile() {
    cat $1
 }
@@ -55,6 +58,6 @@ getServiceStatusResp() {
 }
 
 case $1 in
-   "getServerTimeResp" | "deployResp" | "stopResp" | "restartResp" |"getYamlFileResp" |"getServiceStatusResp") eval $@ ;;
+   "getServerTimeResp" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp" |"getServiceStatusResp") eval $@ ;;
    *) echo "invalid command $1" ;;
 esac
