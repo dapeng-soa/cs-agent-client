@@ -130,13 +130,15 @@ object Main {
       }
     }).on(EventType.GET_SERVICE_STATUS.name, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
-        while (true ) {
-          val deployVoJson = args(0).asInstanceOf[String]
-          val request = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-          val cmd = s"${EventType.GET_SERVICE_STATUS_RESP.name} ${request.getServiceName}"
-          queue.put(cmd)
-          Thread.sleep(10000)
-        }
+        new Thread(() => {
+          while (true) {
+            val deployVoJson = args(0).asInstanceOf[String]
+            val request = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+            val cmd = s"${EventType.GET_SERVICE_STATUS_RESP.name} ${request.getServiceName}"
+            queue.put(cmd)
+            Thread.sleep(10000)
+          }
+        }).start()
       }
     })
 
