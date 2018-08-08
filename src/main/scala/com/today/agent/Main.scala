@@ -128,6 +128,15 @@ object Main {
         val cmd = s"${EventType.RESTART_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
+    }).on(EventType.GET_SERVICE_STATUS.name, new Emitter.Listener {
+      override def call(args: AnyRef*): Unit = {
+        while (true ) {
+          val serviceName = args(0).asInstanceOf[String]
+          val cmd = s"${EventType.GET_SERVICE_STATUS_RESP} ${serviceName}"
+          queue.put(cmd)
+          Thread.sleep(10000)
+        }
+      }
     })
 
     socketClient.connect()
