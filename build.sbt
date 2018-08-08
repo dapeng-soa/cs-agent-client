@@ -9,16 +9,6 @@ scalaVersion := "2.12.4"
 mainClass in assembly := Some("com.today.agent.Main")
 
 /**
-  * <dependency>
-  * <groupId>com.corundumstudio.socketio</groupId>
-  * <artifactId>netty-socketio</artifactId>
-  * <version>1.7.12</version>
-  * </dependency>
-  * <dependency>
-  * <groupId>io.socket</groupId>
-  * <artifactId>socket.io-client</artifactId>
-  * <version>0.8.1</version>
-  * </dependency>
   */
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.17",

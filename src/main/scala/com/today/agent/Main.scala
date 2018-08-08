@@ -68,7 +68,7 @@ object Main {
     }).on(EventType.GET_SERVER_TIME.name, new Emitter.Listener() {
       override def call(args: AnyRef*) {
         val serviceName = args(0)
-        val cmd = s"${EventType.GET_SERVER_TIME.name} $basePath/$yamlFileDir/$serviceName.yml"
+        val cmd = s"${EventType.GET_SERVER_TIME_RESP.name} $basePath/$yamlFileDir/$serviceName.yml"
         queue.put(cmd)
       }
     }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -103,14 +103,14 @@ object Main {
         }
 
         //exec cmd.....
-        val cmd = s"${EventType.DEPLOY.name.toLowerCase()} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
+        val cmd = s"${EventType.DEPLOY_RESP.name.toLowerCase()} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
         queue.put(cmd)
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val cmd = s"${EventType.GET_YAML_FILE.name} $basePath/$yamlFileDir/${deployRequest.getServiceName}.yml"
+        val cmd = s"${EventType.GET_YAML_FILE_RESP.name} $basePath/$yamlFileDir/${deployRequest.getServiceName}.yml"
         queue.put(cmd)
       }
 
@@ -118,14 +118,14 @@ object Main {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val cmd = s"stop ${deployRequest.getServiceName}"
+        val cmd = s"${EventType.STOP_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
     }).on(EventType.RESTART.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val cmd = s"restart ${deployRequest.getServiceName}"
+        val cmd = s"${EventType.RESTART_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
     })

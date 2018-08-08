@@ -55,7 +55,7 @@ public class DeployServerShellInvoker {
 
             br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((inline = br.readLine()) != null) {
-                processInlineToSendEvent(EventType.NODE_EVENT().name(), socket, inline);
+                processInlineToSendEvent(EventType.ERROR_EVENT().name(), socket, inline);
                 System.out.println(inline);
             }
 
@@ -78,15 +78,15 @@ public class DeployServerShellInvoker {
 
         String[] args = oriEvent.split(" ");
         String oriCmd = args[0];
-        if (EventType.GET_SERVER_TIME().name().equals(oriCmd)) {
+        EventType event = EventType.findByLabel(oriCmd);
+        System.out.println(" received oriEvent: " + event.name());
+        if (EventType.GET_SERVER_TIME_RESP().name().equals(oriCmd)) {
             String serviceName = args[1].replace(".yml","");
             serviceName = serviceName.replace(".yml","");
             serviceName = serviceName.substring(serviceName.lastIndexOf("/")+1);
             socket.emit(EventType.GET_SERVER_TIME_RESP().name(), socket.id() + ":" + serviceName + ":" + inline);
-        } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())){
-            socket.emit(EventType.GET_YAML_FILE_RESP().name(), inline);
-        }else {
-            socket.emit(EventType.NODE_EVENT().name(), inline);
+        } else {
+            socket.emit(event.name(), inline);
         }
     }
 

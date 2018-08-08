@@ -1,6 +1,6 @@
 #!/bin/bash
 
-getServerTime(){
+getServerTimeResp(){
    #echo "received serviceName: $1"
    ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
     if [ -f "$1" ];then
@@ -10,7 +10,7 @@ getServerTime(){
     fi
 }
 
-deploy() {
+deployResp() {
   #should be absolute path
   ymlFile="$1.yml"
 
@@ -21,21 +21,37 @@ deploy() {
   fi
 }
 
-stop() {
+stopResp() {
   ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
   echo $@
   echo " $ip stopping $1"
   docker stop $1
 }
 
-restart() {
+restartResp() {
    ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
    echo " $ip restarting $1"
   docker restart $1
 }
 
-getYamlFile() {
+getYamlFileResp() {
    cat $1
+}
+
+getServiceStatusResp() {
+    if [ $# -le 0 ];then
+        echo "invalid cmd...please input your request serviceName"
+        exit 1
+    fi
+    ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
+
+    result=`docker ps | grep $1 | awk '{print $11}'`
+
+    if [ -z $result ]; then
+        echo "$ip:$1:false"
+    else
+        echo "$ip:$1:true"
+    fi
 }
 
 case $1 in
