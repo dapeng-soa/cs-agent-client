@@ -34,7 +34,7 @@ restartResp() {
   docker restart $1
 }
 
-getYamlFileResp() {
+getYamlFile() {
    cat $1
 }
 

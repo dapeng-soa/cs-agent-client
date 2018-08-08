@@ -110,7 +110,7 @@ object Main {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val cmd = s"${EventType.GET_YAML_FILE_RESP.name} $basePath/$yamlFileDir/${deployRequest.getServiceName}.yml"
+        val cmd = s"${EventType.GET_YAML_FILE.name} $basePath/$yamlFileDir/${deployRequest.getServiceName}.yml"
         queue.put(cmd)
       }
 
