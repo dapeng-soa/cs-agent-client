@@ -74,19 +74,21 @@ public class DeployServerShellInvoker {
     }
 
     private static void processInlineToSendEvent(String oriEvent, Socket socket, String inline) {
-        System.out.println(" agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline );
+        System.out.println(" agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline);
 
         String[] args = oriEvent.split(" ");
         String oriCmd = args[0];
         EventType event = EventType.findByLabel(oriCmd);
         System.out.println(" received oriEvent: " + event.name());
         if (EventType.GET_SERVER_TIME_RESP().name().equals(oriCmd)) {
-            String serviceName = args[1].replace(".yml","");
-            serviceName = serviceName.replace(".yml","");
-            serviceName = serviceName.substring(serviceName.lastIndexOf("/")+1);
+            String serviceName = args[1].replace(".yml", "");
+            serviceName = serviceName.replace(".yml", "");
+            serviceName = serviceName.substring(serviceName.lastIndexOf("/") + 1);
             socket.emit(EventType.GET_SERVER_TIME_RESP().name(), socket.id() + ":" + serviceName + ":" + inline);
-        } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())){
+        } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())) {
             socket.emit(EventType.GET_YAML_FILE_RESP().name(), inline);
+        } else if (EventType.GET_SERVICE_STATUS_RESP().name().toUpperCase().equals(oriCmd.toUpperCase())) {
+            socket.emit(EventType.GET_SERVICE_STATUS_RESP().name(), socket.id() + ":" +inline);
         } else {
             socket.emit(event.name(), inline);
         }
