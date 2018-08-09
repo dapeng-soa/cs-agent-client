@@ -1,7 +1,7 @@
 package com.today.agent
 
 import java.io.{File, FileWriter}
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.{Executors, LinkedBlockingQueue, ScheduledExecutorService, TimeUnit}
 
 import com.github.dapeng.socket.entity.{DeployRequest, DeployVo}
 import com.github.dapeng.socket.enums.EventType
@@ -13,12 +13,10 @@ import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
 
 import scala.io.Source
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 object Main {
-  val timer: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor
+  private val timer: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor
+  private val tempService = collection.mutable.Map[String, Boolean]()
 
   def main(args: Array[String]): Unit = {
 
@@ -69,11 +67,22 @@ object Main {
 
         socketClient.emit(EventType.NODE_REG.name, registerInfo)
       }
-    }).on(EventType.GET_SERVER_TIME.name, new Emitter.Listener() {
+    }).on(EventType.GET_SERVER_INFO.name, new Emitter.Listener() {
       override def call(args: AnyRef*) {
-        val serviceName = args(0)
-        val cmd = s"${EventType.GET_SERVER_TIME_RESP.name} $basePath/$yamlFileDir/$serviceName.yml"
-        queue.put(cmd)
+        val deployVoJson = args(0).asInstanceOf[String]
+        val request = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val flag = tempService.getOrElse(request.getServiceName, false)
+        // 一个服务在一个节点只能有一个定时任务询问服务状态/时间
+        if (!flag) {
+          println(s":::warn service [${request.getServiceName}] is not Timing")
+          tempService += (request.getServiceName -> true)
+          timer.scheduleAtFixedRate(() => {
+            val cmd = s"${EventType.GET_SERVER_INFO_RESP.name} ${request.getServiceName} $basePath/$yamlFileDir/${request.getServiceName}.yml"
+            queue.put(cmd)
+          }, 0, 15000, TimeUnit.MILLISECONDS)
+        } else {
+          println(s":::warn service [${request.getServiceName}] is Timing ,skip this")
+        }
       }
     }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
       override def call(args: AnyRef*) {
@@ -107,7 +116,7 @@ object Main {
         }
 
         //exec cmd.....
-        val cmd = s"${EventType.DEPLOY_RESP.name.toLowerCase()} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
+        val cmd = s"${EventType.DEPLOY_RESP.name} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
         queue.put(cmd)
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {
@@ -132,17 +141,7 @@ object Main {
         val cmd = s"${EventType.RESTART_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
-    }).on(EventType.GET_SERVICE_STATUS.name, new Emitter.Listener {
-      override def call(args: AnyRef*): Unit = {
-        timer.scheduleAtFixedRate(() => {
-          val deployVoJson = args(0).asInstanceOf[String]
-          val request = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-          val cmd = s"${EventType.GET_SERVICE_STATUS_RESP.name} ${request.getServiceName}"
-          queue.put(cmd)
-        }, 0, 10000, TimeUnit.MILLISECONDS)
-      }
     })
-
     socketClient.connect()
   }
 }

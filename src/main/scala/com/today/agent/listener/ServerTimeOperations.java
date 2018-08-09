@@ -19,7 +19,7 @@ public class ServerTimeOperations implements Emitter.Listener {
         try{
             String serviceName = (String)objects[0];
 
-            queue.put(EventType.GET_SERVER_TIME().name() + " " + serviceName);
+            queue.put(EventType.GET_SERVER_INFO().name() + " " + serviceName);
         }catch (Exception e){
             e.printStackTrace();
         }

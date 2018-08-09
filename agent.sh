@@ -1,13 +1,27 @@
 #!/bin/bash
-
-getServerTimeResp(){
-   #echo "received serviceName: $1"
-   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
-    if [ -f "$1" ];then
-        echo "$ip:"`stat -c %Y $1`
-    else
-        echo "$ip:"0
+getServerInfoResp(){
+    if [ $# -lt 2 ];then
+        echo "invalid cmd...please input your request [serviceName],[serviceName.yml]"
+        exit 1
     fi
+   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
+
+
+   if [ -e "$2" ];then
+        time=`stat -c %Y $2`
+   else
+        time=0
+   fi
+
+    result1=`docker ps | grep -w $1 | awk '{print $11}'`
+
+    if [ -z $result1 ]; then
+        result="$ip:$1:false:$time"
+    else
+        result="$ip:$1:true:$time"
+    fi
+
+echo $result
 }
 
 deployResp() {
@@ -41,23 +55,7 @@ getYamlFile() {
    cat $1
 }
 
-getServiceStatusResp() {
-    if [ $# -le 0 ];then
-        echo "invalid cmd...please input your request serviceName"
-        exit 1
-    fi
-    ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
-
-    result=`docker ps | grep $1 | awk '{print $11}'`
-
-    if [ -z $result ]; then
-        echo "$ip:$1:false"
-    else
-        echo "$ip:$1:true"
-    fi
-}
-
 case $1 in
-   "getServerTimeResp" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp" |"getServiceStatusResp") eval $@ ;;
+   "getServerInfoResp" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp") eval $@ ;;
    *) echo "invalid command $1" ;;
 esac
