@@ -1,7 +1,7 @@
 package com.today.agent
 
 import java.io.{File, FileWriter}
-import java.util.concurrent.{Executors, LinkedBlockingQueue, ScheduledExecutorService, TimeUnit}
+import java.util.concurrent.LinkedBlockingQueue
 
 import com.github.dapeng.socket.entity.{DeployRequest, DeployVo}
 import com.github.dapeng.socket.enums.EventType
@@ -15,9 +15,6 @@ import io.socket.emitter.Emitter
 import scala.io.Source
 
 object Main {
-  private val timer: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor
-  private val tempService = collection.mutable.Map[String, Boolean]()
-
   def main(args: Array[String]): Unit = {
 
     var serverUrl = "" //http://127.0.0.1:6886
@@ -71,18 +68,8 @@ object Main {
       override def call(args: AnyRef*) {
         val deployVoJson = args(0).asInstanceOf[String]
         val request = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
-        val flag = tempService.getOrElse(request.getServiceName, false)
-        // 一个服务在一个节点只能有一个定时任务询问服务状态/时间
-        if (!flag) {
-          println(s":::warn service [${request.getServiceName}] is not Timing")
-          tempService += (request.getServiceName -> true)
-          timer.scheduleAtFixedRate(() => {
-            val cmd = s"${EventType.GET_SERVER_INFO_RESP.name} ${request.getServiceName} $basePath/$yamlFileDir/${request.getServiceName}.yml"
-            queue.put(cmd)
-          }, 0, 15000, TimeUnit.MILLISECONDS)
-        } else {
-          println(s":::warn service [${request.getServiceName}] is Timing ,skip this")
-        }
+        val cmd = s"${EventType.GET_SERVER_INFO_RESP.name} ${request.getServiceName} $basePath/$yamlFileDir/${request.getServiceName}.yml"
+        queue.put(cmd)
       }
     }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
       override def call(args: AnyRef*) {
@@ -140,6 +127,10 @@ object Main {
         val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"${EventType.RESTART_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
+      }
+    }).on(EventType.WEB_LEAVE.name, new Emitter.Listener {
+      override def call(args: AnyRef*): Unit = {
+        println(":::web node leave")
       }
     })
     socketClient.connect()
