@@ -17,15 +17,15 @@ import scala.io.Source
 object Main {
   def main(args: Array[String]): Unit = {
 
-    var serverUrl = "" //http://127.0.0.1:6886
+    var serverUrl = "http://10.0.75.1:6886" //http://127.0.0.1:6886
     val registerInfo = s"${IPUtils.nodeName}:${IPUtils.localIp}"
 
-    if (args != null && args.length >= 1) {
-      serverUrl = args.head
-    } else {
-      println("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
-      System.exit(1)
-    }
+//    if (args != null && args.length >= 1) {
+//      serverUrl = args.head
+//    } else {
+//      println("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
+//      System.exit(1)
+//    }
 
     println(s"connect serverUrl:$serverUrl")
     println(s"registerInfo:$registerInfo")
@@ -49,6 +49,8 @@ object Main {
 
     val opts = new IO.Options()
     opts.forceNew = true
+    //fixme key要改
+    opts.query = "keys=123456"
 
     val socketClient: Socket = IO.socket(serverUrl, opts)
 
