@@ -105,7 +105,7 @@ object Main {
         }
 
         //exec cmd.....
-        val cmd = s"${EventType.DEPLOY_RESP.name} ${yamlDir.getAbsolutePath}/${vo.getServiceName}"
+        val cmd = s"${EventType.DEPLOY_RESP.name} ${vo.getServiceName}  ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml"
         queue.put(cmd)
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {

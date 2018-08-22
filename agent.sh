@@ -13,7 +13,7 @@ getServerInfoResp(){
         time=0
    fi
 
-    result1=`docker ps | grep -w $1 | awk '{print $2}' | awk -F ':' '{print $NF}'`
+    result1=`docker ps | grep -w "$1$" | awk '{print $2}' | awk -F ':' '{print $NF}'`
 
     if [[ -z $result1 ]]; then
         result="$ip:$1:false:$time:none"
@@ -25,13 +25,17 @@ echo $result
 }
 
 deployResp() {
-  #should be absolute path
-  ymlFile="$1.yml"
+  if [ $# -lt 2 ];then
+        echo "invalid cmd...please input your request [serviceName],[serviceName.yml]"
+        exit 1
+    fi
+  serviceName="$1"
+  ymlFile="$2"
 
   if [ ! -f "$ymlFile" ]; then
     echo "找不到对应的$ymlFile"
   else
-    docker-compose -f $ymlFile up -d
+    docker-compose -p $serviceName -f $ymlFile up -d
   fi
 }
 
