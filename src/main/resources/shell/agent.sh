@@ -13,9 +13,9 @@ getServerInfoResp(){
         time=0
    fi
 
-    result1=`docker ps | grep -w $1 | awk '{print $11}' | awk -F ':' '{print $NF}'`
+    result1=`docker ps | grep -w $1 | awk '{print $2}' | awk -F ':' '{print $NF}'`
 
-    if [ -z $result1 ]; then
+    if [[ -z $result1 ]]; then
         result="$ip:$1:false:$time:none"
     else
         result="$ip:$1:true:$time:$result1"
