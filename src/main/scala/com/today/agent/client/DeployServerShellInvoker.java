@@ -26,7 +26,6 @@ public class DeployServerShellInvoker {
         BufferedWriter wr = null;
 
         try {
-            LOGGER.info(" original event: " + event);
             LOGGER.info("execute command:" + SHELLNAME + " " + event);
             Runtime runtime = Runtime.getRuntime();
             Process process;
@@ -40,7 +39,6 @@ public class DeployServerShellInvoker {
                 realCmd = SHELLNAME + " " + event;
             }
 
-            LOGGER.info("realCmd: " + realCmd);
             cmd = new String[]{"/bin/sh", "-c", realCmd};
 
             // 执行Shell命令
@@ -78,12 +76,12 @@ public class DeployServerShellInvoker {
     }
 
     private static void processInlineToSendEvent(String oriEvent, Socket socket, String inline) {
-        LOGGER.info(" agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline);
+        LOGGER.info("agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline);
 
         String[] args = oriEvent.split(" ");
         String oriCmd = args[0];
         EventType event = EventType.findByLabel(oriCmd);
-        LOGGER.info(" received oriEvent: " + event.name());
+        LOGGER.info("received oriEvent: " + event.name());
         if (EventType.GET_SERVER_INFO_RESP().name().equals(oriCmd)) {
             socket.emit(EventType.GET_SERVER_INFO_RESP().name(), socket.id() + ":" + inline);
         } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())) {
