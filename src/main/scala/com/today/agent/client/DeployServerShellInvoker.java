@@ -2,6 +2,8 @@ package com.today.agent.client;
 
 import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,13 +19,15 @@ import static com.github.dapeng.socket.SystemParas.SHELLNAME;
  */
 public class DeployServerShellInvoker {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(DeployServerShellInvoker.class);
+
     public static void executeShell(Socket socket, String event) throws Exception {
         BufferedReader br = null;
         BufferedWriter wr = null;
 
         try {
-            System.out.println(" original event: " + event);
-            System.out.println("execute command:" + SHELLNAME + " " + event);
+            LOGGER.info(" original event: " + event);
+            LOGGER.info("execute command:" + SHELLNAME + " " + event);
             Runtime runtime = Runtime.getRuntime();
             Process process;
 
@@ -36,7 +40,7 @@ public class DeployServerShellInvoker {
                 realCmd = SHELLNAME + " " + event;
             }
 
-            System.out.println("realCmd: " + realCmd);
+            LOGGER.info("realCmd: " + realCmd);
             cmd = new String[]{"/bin/sh", "-c", realCmd};
 
             // 执行Shell命令
@@ -49,14 +53,14 @@ public class DeployServerShellInvoker {
             String inline;
             while ((inline = br.readLine()) != null) {
                 processInlineToSendEvent(event, socket, inline);
-                System.out.println(inline);
+                LOGGER.info(inline);
             }
             br.close();
 
             br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((inline = br.readLine()) != null) {
                 processInlineToSendEvent(EventType.ERROR_EVENT().name(), socket, inline);
-                System.out.println(inline);
+                LOGGER.info(inline);
             }
 
             if (process != null) {
@@ -74,12 +78,12 @@ public class DeployServerShellInvoker {
     }
 
     private static void processInlineToSendEvent(String oriEvent, Socket socket, String inline) {
-        System.out.println(" agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline);
+        LOGGER.info(" agent_bash start to send " + oriEvent + " socket: " + socket.id() + "conetnt: " + inline);
 
         String[] args = oriEvent.split(" ");
         String oriCmd = args[0];
         EventType event = EventType.findByLabel(oriCmd);
-        System.out.println(" received oriEvent: " + event.name());
+        LOGGER.info(" received oriEvent: " + event.name());
         if (EventType.GET_SERVER_INFO_RESP().name().equals(oriCmd)) {
             socket.emit(EventType.GET_SERVER_INFO_RESP().name(), socket.id() + ":" + inline);
         } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())) {

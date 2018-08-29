@@ -11,10 +11,14 @@ import com.today.agent.client.CmdExecutor
 import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
 
 object Main {
+
+  val LOGGER: Logger = LoggerFactory.getLogger(this.getClass)
+
   def main(args: Array[String]): Unit = {
 
     var serverUrl = "http://10.0.75.1:6886" //http://127.0.0.1:6886
@@ -23,15 +27,16 @@ object Main {
     if (args != null && args.length >= 1) {
       serverUrl = args.head
     } else {
-      println("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
+      LOGGER.info("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
+      //LOGGER.info("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
       System.exit(1)
     }
 
-    println(s"connect serverUrl:$serverUrl")
-    println(s"registerInfo:$registerInfo")
+    LOGGER.info(s"connect serverUrl:$serverUrl")
+    LOGGER.info(s"registerInfo:$registerInfo")
 
     //TODO 测试
-    //println(classOf[DeployServerShellInvoker].getClassLoader.getResource("./"))
+    //LOGGER.info(classOf[DeployServerShellInvoker].getClassLoader.getResource("./"))
     //val yamlFileDir = s"${classOf[DeployServerShellInvoker].getClassLoader.getResource("./").getPath()}yamlDir"
 
     //TODO jar包运行
@@ -41,10 +46,10 @@ object Main {
       jarWholePath = java.net.URLDecoder.decode(jarWholePath, "UTF-8")
     catch {
       case e: UnsupportedEncodingException =>
-        println(s"get jar basePath error:$e")
+        LOGGER.info(s"get jar basePath error:$e")
     }
     val basePath = new File(jarWholePath).getParentFile.getAbsolutePath
-    println(s"basePath:$basePath")
+    LOGGER.info(s"basePath:$basePath")
     val yamlFileDir = "yamlDir"
 
     val opts = new IO.Options()
@@ -61,7 +66,7 @@ object Main {
 
     socketClient.on(Socket.EVENT_CONNECT, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
-        println(s" connected......clientId: ${socketClient.id()}...")
+        LOGGER.info(s" connected......clientId: ${socketClient.id()}...")
 
 
         socketClient.emit(EventType.NODE_REG.name, registerInfo)
@@ -75,7 +80,7 @@ object Main {
       }
     }).on("webCmd", new DeployServerOperations(queue, socketClient)).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
       override def call(args: AnyRef*) {
-        println(" disconnected ........")
+        LOGGER.info(" disconnected ........")
       }
     }).on(EventType.DEPLOY.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
@@ -95,11 +100,11 @@ object Main {
             writer.write("\n")
           })
           writer.flush()
-          println(s"set service ${vo.getServiceName} LastModifyTime is:${vo.getLastModifyTime}")
+          LOGGER.info(s"set service ${vo.getServiceName} LastModifyTime is:${vo.getLastModifyTime}")
           yamlFile.setLastModified(vo.getLastModifyTime)
           //yamlFile.setReadOnly()
         } catch {
-          case e: Exception => println(s" failed to write file.......${e.getMessage}")
+          case e: Exception => LOGGER.info(s" failed to write file.......${e.getMessage}")
         } finally {
           writer.close()
         }
@@ -132,7 +137,7 @@ object Main {
       }
     }).on(EventType.WEB_LEAVE.name, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
-        println(":::web node leave")
+        LOGGER.info(":::web node leave")
       }
     })
     socketClient.connect()
