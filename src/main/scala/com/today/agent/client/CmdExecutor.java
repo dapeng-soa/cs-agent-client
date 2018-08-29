@@ -1,5 +1,6 @@
 package com.today.agent.client;
 
+import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,14 @@ public class CmdExecutor implements Runnable{
 
                     String oriEvent = event.split(" ")[0];
 
-                    socket.emit(oriEvent,"[started]");
-                    socket.emit(oriEvent, event);
-
-                    DeployServerShellInvoker.executeShell(socket, event);
-
-                    socket.emit(oriEvent,"[end]");
+                    if (oriEvent.equals(EventType.GET_SERVER_INFO_RESP().name())||oriEvent.equals(EventType.GET_YAML_FILE().name())){
+                        DeployServerShellInvoker.executeShell(socket, event);
+                    }else {
+                        socket.emit(oriEvent,"[started]");
+                        socket.emit(oriEvent, event);
+                        DeployServerShellInvoker.executeShell(socket, event);
+                        socket.emit(oriEvent,"[end]");
+                    }
                 } catch (Exception ex) {
                    ex.printStackTrace();
                 }

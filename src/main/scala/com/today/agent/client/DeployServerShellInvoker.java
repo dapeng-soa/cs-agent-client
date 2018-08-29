@@ -81,6 +81,7 @@ public class DeployServerShellInvoker {
         String[] args = oriEvent.split(" ");
         String oriCmd = args[0];
         EventType event = EventType.findByLabel(oriCmd);
+
         LOGGER.info("received oriEvent: " + event.name());
         if (EventType.GET_SERVER_INFO_RESP().name().equals(oriCmd)) {
             socket.emit(EventType.GET_SERVER_INFO_RESP().name(), socket.id() + ":" + inline);
