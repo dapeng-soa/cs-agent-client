@@ -59,6 +59,93 @@ getYamlFile() {
    cat $1
 }
 
+build() {
+    echo "ori cmd: $@"
+    echo "serviceName: $1"
+    echo "projectUrl: $2"
+    echo "serviceBranch: $3"
+    cmd=`echo ${@:4}`
+    echo "cmd: $cmd"
+    projectRootName=`echo ${2##*/} | cut -d . -f 1`
+    echo $projectRootName
+    if [ ! -d "/home/jack/agent_test/workspace" ];
+    then
+        echo "目录不存在: /data/jack/agent_test/workspace, 退出"
+        return 1
+    fi
+
+    cd "/home/jack/agent_test/workspace/"
+    if [ ! -d $projectRootName ];
+    then
+        echo "项目不存在, 拉取项目: $2"
+        #git clone $2
+        mkdir $projectRootName
+    else
+        echo "项目已存在, 执行构建指令"
+    fi
+
+
+    cd /home/jack/agent_test/workspace/$projectRootName
+
+    #判断cmd是否包含api指令，有的话，需要更新.build_api.cache.ini, 否则更新.build.cache.ini
+    echo "执行指令: $cmd"
+    if [[ $cmd =~ "api" ]]
+    then
+        echo "指令包含api，更新.build_api.cache.ini"
+        cd /home/jack/agent_test/agent_client
+        if [ ! -f ".build_api.cache.ini" ];
+        then
+            echo ".build_api.cache.ini 文件不存在, 新建"
+            touch .build_api.cache.ini
+        else
+            echo ".build_api.cache.ini 文件已存在"
+        fi
+
+        oldGitId=`cat .build_api.cache.ini | grep $1 | awk -F "=" '{print $2}'`
+        newGitId=`git rev-parse --shot HEAD`
+        echo 'oldGitId: ${oldGitId}, newGitId: $newGitId'
+        if [ $newGitId = $oldGitId ];
+        then
+            echo "gitId 一致，不需要重新构建，跳过..."
+        else
+            #remove service old gitid
+            echo "删除旧的gitid"
+            sed -i "/^$1/d" .build_api.cache.ini
+            #add service new gitid at last line of .build_api.cache.ini
+            echo "$1=$gitid" >> .build_api.cache.ini
+            echo "执行指令: $cmd"
+            eval `$cmd`
+        fi
+    else
+        echo "不包含api"
+        cd /home/jack/agent_test/agent_client
+        if [ ! -f ".build.cache.ini" ];
+        then
+            echo ".build.cache.ini 文件不存在，新建"
+            touch .build.cache.ini
+        else
+            echo ".build.cache.ini 文件已存在"
+        fi
+
+        oldGitId=`cat .build.cache.ini | grep $1 | awk -F "=" '{print $2}'`
+        newGitId=`git rev-parse --shot HEAD`
+        echo 'oldGitId: ${oldGitId}, newGitId: $newGitId'
+        if [ $newGitId = $oldGitId ];
+        then
+            echo "gitId 一致，不需要重新构建，跳过..."
+        else
+            #remove service old gitid
+            echo "删除旧的gitid"
+            sed -i "/^$1/d" .build_api.cache.ini
+            #add service new gitid at last line of .build_api.cache.ini
+            echo "$1=$gitid" >> .build_api.cache.ini
+            echo "执行指令: $cmd"
+            eval `$cmd`
+        fi
+    fi
+}
+
+
 case $1 in
    "getServerInfoResp" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp") eval $@ ;;
    *) echo "invalid command $1" ;;

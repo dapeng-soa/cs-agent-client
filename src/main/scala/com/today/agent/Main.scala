@@ -3,7 +3,7 @@ package com.today.agent
 import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
-import com.github.dapeng.socket.entity.{DeployRequest, DeployVo}
+import com.github.dapeng.socket.entity.{DeployRequest, DeployVo, YamlServiceVo}
 import com.github.dapeng.socket.enums.EventType
 import com.github.dapeng.socket.util.IPUtils
 import com.google.gson.Gson
@@ -71,6 +71,21 @@ object Main {
 
         socketClient.emit(EventType.NODE_REG.name, registerInfo)
       }
+    }).on(EventType.BUILD.name, (args: AnyRef*) => {
+      val buildJson = args(0).asInstanceOf[String]
+      val request = new Gson().fromJson(buildJson, classOf[List[YamlServiceVo]])
+      request.foreach(vo => {
+        /*
+          * echo "ori cmd: $@"
+          * echo "serviceName: $1"
+          * echo "projectUrl: $2"
+          * echo "serviceBranch: $3"
+          * cmd=`echo ${@:4}`
+          */
+        val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getBuildOperation}"
+        queue.add(cmd)
+      })
+
     }).on(EventType.GET_SERVER_INFO.name, new Emitter.Listener() {
       override def call(args: AnyRef*) {
         val deployVoJson = args(0).asInstanceOf[String]
