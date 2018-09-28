@@ -12,6 +12,7 @@ import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
 import org.slf4j.{Logger, LoggerFactory}
+
 import scala.collection.JavaConverters._
 import scala.io.Source
 
@@ -107,7 +108,11 @@ object Main {
           val filePath = new File(path)
           // 没有就创建目录
           if (!filePath.exists()) {
-            filePath.mkdir()
+            if (filePath.mkdirs()) {
+              LOGGER.info(s"::mkdir [ $filePath ] success !")
+            } else {
+              LOGGER.warn(s"::mkdir [ $filePath ] error !")
+            }
           }
           val genFile = new File(filePath.getAbsolutePath, name)
           val writer = new FileWriter(genFile)
@@ -121,7 +126,7 @@ object Main {
             writer.flush()
             genFile.setLastModified(vo.getLastModifyTime)
           } catch {
-            case e: Exception => LOGGER.info(s" failed to write file: ${x.getFileName}.......${e.getMessage}")
+            case e: Exception => LOGGER.error(s" failed to write file: ${x.getFileName}.......${e.getMessage}")
           } finally {
             writer.close()
           }
@@ -130,7 +135,7 @@ object Main {
         // 生成服务yaml文件
         val yamlDir = new File(new File(basePath), yamlFileDir)
         if (!yamlDir.exists()) {
-          yamlDir.mkdir()
+          yamlDir.mkdirs()
         }
 
         val yamlFile = new File(yamlDir.getAbsolutePath, s"${vo.getServiceName}.yml")
