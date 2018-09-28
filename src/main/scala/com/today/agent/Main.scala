@@ -12,7 +12,7 @@ import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
 import org.slf4j.{Logger, LoggerFactory}
-
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 object Main {
@@ -52,12 +52,7 @@ object Main {
     LOGGER.info(s"basePath:$basePath")
     val yamlFileDir = "yamlDir"
 
-    val opts = new IO.Options()
-    opts.forceNew = true
-    //fixme key要改
-    opts.query = "keys=123456"
-
-    val socketClient: Socket = IO.socket(serverUrl, opts)
+    val socketClient: Socket = IO.socket(serverUrl)
 
     val queue = new LinkedBlockingQueue[String]()
     val cmdExecutor = new CmdExecutor(queue, socketClient)
@@ -101,6 +96,36 @@ object Main {
       override def call(objects: AnyRef*): Unit = {
         val voString = objects(0).asInstanceOf[String]
         val vo = new Gson().fromJson(voString, classOf[DeployVo])
+        // 优先生成服务挂载所需的配置文件
+        vo.getVolumesFiles.asScala.toList.foreach(x => {
+          // 获取文件的存储目录
+          val path = x.getFileName.substring(0, x.getFileName.lastIndexOf("/"))
+          // 文件名
+          val name = x.getFileName.substring(x.getFileName.lastIndexOf("/") + 1)
+          val filePath = new File(path)
+          // 没有就创建目录
+          if (!filePath.exists()) {
+            filePath.mkdir()
+          }
+          val genFile = new File(filePath.getAbsolutePath, name)
+          val writer = new FileWriter(genFile)
+          try {
+            // 文件内容直接写就是了
+            val finalContent = Source.fromString(x.getFileContext).getLines()
+            finalContent.foreach(i => {
+              writer.write(i)
+              writer.write("\n")
+            })
+            writer.flush()
+            genFile.setLastModified(vo.getLastModifyTime)
+          } catch {
+            case e: Exception => LOGGER.info(s" failed to write file: ${x.getFileName}.......${e.getMessage}")
+          } finally {
+            writer.close()
+          }
+        })
+
+        // 生成服务yaml文件
         val yamlDir = new File(new File(basePath), yamlFileDir)
         if (!yamlDir.exists()) {
           yamlDir.mkdir()
@@ -119,7 +144,7 @@ object Main {
           yamlFile.setLastModified(vo.getLastModifyTime)
           //yamlFile.setReadOnly()
         } catch {
-          case e: Exception => LOGGER.info(s" failed to write file.......${e.getMessage}")
+          case e: Exception => LOGGER.info(s" failed to write file: ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml.......${e.getMessage}")
         } finally {
           writer.close()
         }
