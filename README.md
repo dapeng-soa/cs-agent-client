@@ -8,9 +8,9 @@ sbt dist
 将打包所得可执行文件`agentClient`,`shell`目录下`agent.sh`、`startup.sh`文件复制到同一目录：
 ```sbtshell
 agent_client
-    |- agentClient
-    |- agent.sh
-    |- startup.sh
+    |- agentClient #核心启动程序
+    |- agent.sh #执行指令的脚本
+    |- startup.sh #启动脚本
 ```
 ## 启动客户端
 ```bash
