@@ -29,7 +29,6 @@ object Main {
       serverUrl = args.head
     } else {
       LOGGER.info("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
-      //LOGGER.info("connect serverUrl not set ,Please set e.g. [http://127.0.0.1:6886]")
       System.exit(1)
     }
 
