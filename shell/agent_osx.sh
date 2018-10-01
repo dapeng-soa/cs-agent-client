@@ -1,4 +1,5 @@
 #!/bin/bash
+# only run in Mac OSX
 getServerInfoResp(){
     if [ $# -lt 2 ];then
         echo "invalid cmd...please input your request [serviceName],[serviceName.yml]"
