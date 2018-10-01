@@ -38,11 +38,11 @@ deployResp() {
   else
     docker-compose -p $serviceName -f $ymlFile up -d
     if [ $? -ne 0 ]; then
-        echo  "\033[31m update $serviceName failed, delete service $serviceName.yml file \033[0m"
+        echo -e "\033[31m update $serviceName failed, delete service $serviceName.yml file \033[0m"
         rm $ymlFile
-        echo  "\033[33m done \033[0m"
+        echo -e "\033[33m done \033[0m"
     else
-        echo  "\033[32m update successful!!! \033[0m"
+        echo -e "\033[32m update successful!!! \033[0m"
     fi
   fi
 }
@@ -50,23 +50,23 @@ deployResp() {
 stopResp() {
   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
   echo $@
-   echo  "\033[33m $ip stopping $1 \033[0m"
+   echo -e "\033[33m $ip stopping $1 \033[0m"
   docker stop $1
   if [ $? -ne 0 ]; then
-    echo   "\033[31m stop $1 fail \033[0m"
+    echo -e  "\033[31m stop $1 fail \033[0m"
   else
-    echo  "\033[32m stop $1 success \033[0m"
+    echo -e "\033[32m stop $1 success \033[0m"
   fi
 }
 
 restartResp() {
    ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
-    echo  "\033[33m $ip restarting $1 \033[0m"
+    echo -e "\033[33m $ip restarting $1 \033[0m"
   docker restart $1
   if [ $? -ne 0 ]; then
-    echo   "\033[31m restart $1 fail \033[0m"
+    echo -e  "\033[31m restart $1 fail \033[0m"
   else
-    echo  "\033[32m restart $1 success \033[0m"
+    echo -e "\033[32m restart $1 success \033[0m"
   fi
 }
 
