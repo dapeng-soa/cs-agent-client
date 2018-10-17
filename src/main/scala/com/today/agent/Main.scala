@@ -3,10 +3,11 @@ package com.today.agent
 import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
-import com.github.dapeng.socket.entity.{DeployRequest, DeployVo, YamlServiceVo}
+import com.github.dapeng.socket.entity.{DependServiceVo, DeployRequest, DeployVo}
 import com.github.dapeng.socket.enums.EventType
 import com.github.dapeng.socket.util.IPUtils
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.today.agent.client.CmdExecutor
 import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
@@ -69,8 +70,9 @@ object Main {
     }).on(EventType.BUILD.name, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
         val buildJson = args(0).asInstanceOf[String]
-        val request = new Gson().fromJson(buildJson, classOf[List[YamlServiceVo]])
-        request.foreach(vo => {
+        val request: java.util.List[DependServiceVo] = new Gson().fromJson(buildJson, new TypeToken[java.util.List[DependServiceVo]]() {
+        }.getType)
+        request.asScala.foreach(vo => {
           /*
           * echo "ori cmd: $@"
           * echo "serviceName: $1"
