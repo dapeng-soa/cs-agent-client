@@ -103,10 +103,10 @@ object Main {
         // 优先生成服务挂载所需的配置文件
         vo.getVolumesFiles.asScala.toList.foreach(x => {
           // 获取文件的存储目录
-          val path = x.getFileName.substring(0, x.getFileName.lastIndexOf("/"))
+          val path = x.getFileName.substring(2, x.getFileName.lastIndexOf("/"))
           // 文件名
           val name = x.getFileName.substring(x.getFileName.lastIndexOf("/") + 1)
-          val filePath = new File(path)
+          val filePath = new File(s"$basePath/$yamlFileDir/$path")
           // 没有就创建目录
           if (!filePath.exists()) {
             if (filePath.mkdirs()) {
