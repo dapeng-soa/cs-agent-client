@@ -89,7 +89,7 @@ build() {
     WORKSPACE=`echo $COMPOSE_WORKSPACE`
     if [ ! -d "$WORKSPACE" ];
     then
-        echo "目录不存在: /data/jack/agent_test/workspace, 退出"
+        echo "目录不存在: $WORKSPACE, 退出"
         return 1
     fi
 
@@ -102,7 +102,7 @@ build() {
         echo "项目已存在, 执行构建指令"
     fi
 
-    cd /home/jack/agent_test/workspace/$projectRootName
+    cd $WORKSPACE/$projectRootName
 
     #判断cmd是否包含api指令，有的话，需要更新.build_api.cache.ini, 否则更新.build.cache.ini
     echo "执行指令: $cmd"
