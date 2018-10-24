@@ -87,6 +87,8 @@ public class DeployServerShellInvoker {
             socket.emit(EventType.GET_SERVER_INFO_RESP().name(), socket.id() + ":" + inline);
         } else if (EventType.GET_YAML_FILE().name().toUpperCase().equals(oriCmd.toUpperCase())) {
             socket.emit(EventType.GET_YAML_FILE_RESP().name(), inline);
+        } else if (EventType.BUILD().name().toUpperCase().equals(oriCmd.toUpperCase())) {
+            socket.emit(EventType.BUILD_RESP().name(), inline);
         } else {
             socket.emit(event.name(), inline);
         }

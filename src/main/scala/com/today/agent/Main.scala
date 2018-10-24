@@ -20,6 +20,7 @@ import scala.io.Source
 object Main {
 
   val LOGGER: Logger = LoggerFactory.getLogger(this.getClass)
+  val gson: Gson = new Gson
 
   def main(args: Array[String]): Unit = {
 
@@ -70,7 +71,7 @@ object Main {
     }).on(EventType.BUILD.name, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
         val buildJson = args(0).asInstanceOf[String]
-        val request: java.util.List[DependServiceVo] = new Gson().fromJson(buildJson, new TypeToken[java.util.List[DependServiceVo]]() {
+        val request: java.util.List[DependServiceVo] = gson.fromJson(buildJson, new TypeToken[java.util.List[DependServiceVo]]() {
         }.getType)
         request.asScala.foreach(vo => {
           /*
@@ -88,7 +89,7 @@ object Main {
     }).on(EventType.GET_SERVER_INFO.name, new Emitter.Listener() {
       override def call(args: AnyRef*) {
         val deployVoJson = args(0).asInstanceOf[String]
-        val request = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val request = gson.fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"${EventType.GET_SERVER_INFO_RESP.name} ${request.getServiceName} $basePath/$yamlFileDir/${request.getServiceName}.yml"
         queue.put(cmd)
       }
@@ -99,7 +100,7 @@ object Main {
     }).on(EventType.DEPLOY.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val voString = objects(0).asInstanceOf[String]
-        val vo = new Gson().fromJson(voString, classOf[DeployVo])
+        val vo = gson.fromJson(voString, classOf[DeployVo])
         // 优先生成服务挂载所需的配置文件
         vo.getVolumesFiles.asScala.toList.foreach(x => {
           // 获取文件的存储目录
@@ -164,7 +165,7 @@ object Main {
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
-        val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val deployRequest = gson.fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"${EventType.GET_YAML_FILE.name} $basePath/$yamlFileDir/${deployRequest.getServiceName}.yml"
         queue.put(cmd)
       }
@@ -172,14 +173,14 @@ object Main {
     }).on(EventType.STOP.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
-        val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val deployRequest = gson.fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"${EventType.STOP_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
     }).on(EventType.RESTART.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val deployVoJson = objects(0).asInstanceOf[String]
-        val deployRequest = new Gson().fromJson(deployVoJson, classOf[DeployRequest])
+        val deployRequest = gson.fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"${EventType.RESTART_RESP.name} ${deployRequest.getServiceName}"
         queue.put(cmd)
       }
