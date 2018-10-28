@@ -38,8 +38,7 @@ deployResp() {
   else
     docker-compose -p $serviceName -f $ymlFile up -d
     if [ $? -ne 0 ]; then
-        echo  "\033[31m update $serviceName failed, delete service $serviceName.yml file \033[0m"
-        rm $ymlFile
+        echo  "\033[31m update $serviceName failed \033[0m"
         echo  "\033[33m done \033[0m"
     else
         echo  "\033[32m update successful!!! \033[0m"
@@ -78,6 +77,7 @@ getYamlFile() {
 }
 
 build() {
+    echo "build runing..."
     echo "ori cmd: $@"
     echo "serviceName: $1"
     echo "projectUrl: $2"
@@ -87,6 +87,7 @@ build() {
     projectRootName=`echo ${2##*/} | cut -d . -f 1`
     echo "projectGitName: "$projectRootName
     WORKSPACE=`echo $COMPOSE_WORKSPACE`
+    AGENT_PWD=`echo $AGENT_HOME`
     if [ ! -d "$WORKSPACE" ];
     then
         echo "目录不存在: $WORKSPACE, 退出"
@@ -103,14 +104,14 @@ build() {
     fi
 
     cd $WORKSPACE/$projectRootName
-
+    echo "当前项目目录: `pwd` ,agent目录: `echo $AGENT_HOME`"
     #判断cmd是否包含api指令，有的话，需要更新.build_api.cache.ini, 否则更新.build.cache.ini
     echo "执行指令: $cmd"
     if [[ $cmd =~ "api" ]]
     then
         echo "指令包含api，更新.build_api.cache.ini"
         #fixme, 添加环境变量
-        cd $AGENT_HOME
+        cd $AGENT_PWD
         if [ ! -f ".build_api.cache.ini" ];
         then
             echo ".build_api.cache.ini 文件不存在, 新建"
@@ -121,7 +122,7 @@ build() {
 
         oldGitId=`cat .build_api.cache.ini | grep $1 | awk -F "=" '{print $2}'`
         newGitId=`git rev-parse --shot HEAD`
-        echo 'oldGitId: ${oldGitId}, newGitId: $newGitId'
+        echo 'oldGitId: '$oldGitId', newGitId: '$newGitId
         if [ $newGitId = $oldGitId ];
         then
             echo "gitId 一致，不需要重新构建，跳过..."
@@ -150,7 +151,7 @@ build() {
 
         oldGitId=`cat .build.cache.ini | grep $1 | awk -F "=" '{print $2}'`
         newGitId=`git rev-parse --shot HEAD`
-        echo 'oldGitId: ${oldGitId}, newGitId: $newGitId'
+        echo 'oldGitId: '$oldGitId', newGitId: '$newGitId
         if [ $newGitId = $oldGitId ];
         then
             echo "gitId 一致，不需要重新构建，跳过..."
@@ -161,11 +162,12 @@ build() {
             #add service new gitid at last line of .build_api.cache.ini
             echo "$1=$gitid" >> .build_api.cache.ini
 
-            cd $COMPOSE_WORKSPACE
+            cd $COMPOSE_WORKSPACE/$projectRootName
             echo "执行指令: $cmd"
             eval `$cmd`
         fi
     fi
+    echo $1" BUILD_END"
 }
 
 
