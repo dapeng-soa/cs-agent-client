@@ -82,6 +82,7 @@ object Main {
           * cmd=`echo ${@:4}`
           */
           val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getBuildOperation}"
+          LOGGER.info(s" start to execute cmd: ${cmd}")
           queue.add(cmd)
         })
       }
