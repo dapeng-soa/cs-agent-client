@@ -107,7 +107,7 @@ build() {
     echo "当前项目目录: `pwd` ,agent目录: `echo $AGENT_HOME`"
     #判断cmd是否包含api指令，有的话，需要更新.build_api.cache.ini, 否则更新.build.cache.ini
     echo "执行指令: $cmd"
-    if [[ $cmd =~ "api" ]]
+    if [[ $cmd =~ "api" ]];
     then
         echo "指令包含api，更新.build_api.cache.ini"
         #fixme, 添加环境变量
@@ -121,22 +121,26 @@ build() {
         fi
 
         oldGitId=`cat .build_api.cache.ini | grep $1 | awk -F "=" '{print $2}'`
-        newGitId=`git rev-parse --shot HEAD`
+
+        cd $WORKSPACE/$projectRootName
+        newGitId=`git rev-parse --short HEAD`
         echo 'oldGitId: '$oldGitId', newGitId: '$newGitId
         if [ $newGitId = $oldGitId ];
         then
             echo "gitId 一致，不需要重新构建，跳过..."
+            BUILD_STATUS=$?
         else
             #remove service old gitid
-
-            echo "gitId不一致, 删除旧的gitid, 重新构建"
-            sed -i "/^$1/d" .build_api.cache.ini
+            #cd $AGENT_HOME
+            #echo "gitId不一致, 删除旧的gitid, 重新构建"
+            #sed -i "/^$1/d" .build_api.cache.ini
             #add service new gitid at last line of .build_api.cache.ini
-            echo "$1=$gitid" >> .build_api.cache.ini
+            #echo "$1=$newGitId" >> .build_api.cache.ini
 
             cd $COMPOSE_WORKSPACE
             echo "执行指令: $cmd"
-            eval `$cmd`
+            $cmd
+            BUILD_STATUS=$?
         fi
     else
         echo "不包含api"
@@ -150,24 +154,39 @@ build() {
         fi
 
         oldGitId=`cat .build.cache.ini | grep $1 | awk -F "=" '{print $2}'`
-        newGitId=`git rev-parse --shot HEAD`
+        cd $WORKSPACE/$projectRootName
+        newGitId=`git rev-parse --short HEAD`
         echo 'oldGitId: '$oldGitId', newGitId: '$newGitId
-        if [ $newGitId = $oldGitId ];
+        if [ "$newGitId" = "$oldGitId" ];
         then
             echo "gitId 一致，不需要重新构建，跳过..."
+            BUILD_STATUS=$?
         else
             #remove service old gitid
-            echo "删除旧的gitid"
-            sed -i "/^$1/d" .build_api.cache.ini
-            #add service new gitid at last line of .build_api.cache.ini
-            echo "$1=$gitid" >> .build_api.cache.ini
+            #echo "更新.build.cache.ini gitid"
+            #cd $AGENT_HOME
+            #sed -i "/^$1/d" .build.cache.ini
+            #add service new gitid at last line of .build.cache.ini
+            #echo "$1=$newGitId" >> .build.cache.ini
 
             cd $COMPOSE_WORKSPACE/$projectRootName
             echo "执行指令: $cmd"
-            eval `$cmd`
+            $cmd
+	    BUILD_STATUS=$?
         fi
     fi
-    echo $1" BUILD_END"
+    if [ $BUILD_STATUS = 0 ];
+    then
+        #remove service old gitid
+        echo "构建成功，更新gitid"
+        cd $AGENT_HOME
+        sed -i "/^$1/d" .build.cache.ini
+        #add service new gitid at last line of .build.cache.ini
+        echo "$1=$newGitId" >> .build.cache.ini
+    else
+	echo "构建失败， 跳过更新gitid"
+    fi
+    echo $1" BUILD_END:$BUILD_STATUS"
 }
 
 
