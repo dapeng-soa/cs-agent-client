@@ -103,37 +103,49 @@ object Main {
         val voString = objects(0).asInstanceOf[String]
         val vo = gson.fromJson(voString, classOf[DeployVo])
         // 优先生成服务挂载所需的配置文件
-        vo.getVolumesFiles.asScala.toList.foreach(x => {
-          // 获取文件的存储目录
-          val path = x.getFileName.substring(2, x.getFileName.lastIndexOf("/"))
-          // 文件名
-          val name = x.getFileName.substring(x.getFileName.lastIndexOf("/") + 1)
-          val filePath = new File(s"$basePath/$yamlFileDir/$path")
-          // 没有就创建目录
-          if (!filePath.exists()) {
-            if (filePath.mkdirs()) {
-              LOGGER.info(s"::mkdir [ $filePath ] success !")
-            } else {
-              LOGGER.warn(s"::mkdir [ $filePath ] error !")
+        if (null != vo.getVolumesFiles) {
+          try {
+            vo.getVolumesFiles.asScala.toList.foreach(x => {
+              // 获取文件的存储目录
+              val path = x.getFileName.substring(2, x.getFileName.lastIndexOf("/"))
+              // 文件名
+              val name = x.getFileName.substring(x.getFileName.lastIndexOf("/") + 1)
+              val filePath = new File(s"$basePath/$yamlFileDir/$path")
+              // 没有就创建目录
+              if (!filePath.exists()) {
+                if (filePath.mkdirs()) {
+                  LOGGER.info(s"::mkdir [ $filePath ] success !")
+                } else {
+                  LOGGER.warn(s"::mkdir [ $filePath ] error !")
+                }
+              }
+              val genFile = new File(filePath.getAbsolutePath, name)
+              val writer = new FileWriter(genFile)
+              try {
+                // 文件内容直接写就是了
+                val finalContent = Source.fromString(x.getFileContext).getLines()
+                finalContent.foreach(i => {
+                  writer.write(i)
+                  writer.write("\n")
+                })
+                writer.flush()
+                genFile.setLastModified(vo.getLastModifyTime)
+              } catch {
+                case e: Exception => {
+                  LOGGER.error(s" failed to write file: ${x.getFileName}.......${e.getMessage}")
+                  socketClient.emit(EventType.ERROR_EVENT.name, "failed to write file")
+                }
+              } finally {
+                writer.close()
+              }
+            })
+          } catch {
+            case e: Exception => {
+              LOGGER.error(s" failed to write file ${e.getMessage}")
+              socketClient.emit(EventType.ERROR_EVENT.name, "failed to write file")
             }
           }
-          val genFile = new File(filePath.getAbsolutePath, name)
-          val writer = new FileWriter(genFile)
-          try {
-            // 文件内容直接写就是了
-            val finalContent = Source.fromString(x.getFileContext).getLines()
-            finalContent.foreach(i => {
-              writer.write(i)
-              writer.write("\n")
-            })
-            writer.flush()
-            genFile.setLastModified(vo.getLastModifyTime)
-          } catch {
-            case e: Exception => LOGGER.error(s" failed to write file: ${x.getFileName}.......${e.getMessage}")
-          } finally {
-            writer.close()
-          }
-        })
+        }
 
         // 生成服务yaml文件
         val yamlDir = new File(new File(basePath), yamlFileDir)
@@ -154,7 +166,10 @@ object Main {
           yamlFile.setLastModified(vo.getLastModifyTime)
           //yamlFile.setReadOnly()
         } catch {
-          case e: Exception => LOGGER.info(s" failed to write file: ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml.......${e.getMessage}")
+          case e: Exception => {
+            LOGGER.info(s" failed to write file: ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml.......${e.getMessage}")
+            socketClient.emit(EventType.ERROR_EVENT.name, "update failed")
+          }
         } finally {
           writer.close()
         }
