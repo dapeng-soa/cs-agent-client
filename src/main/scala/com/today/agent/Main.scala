@@ -3,7 +3,7 @@ package com.today.agent
 import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
-import com.github.dapeng.socket.entity.{DependServiceVo, DeployRequest, DeployVo}
+import com.github.dapeng.socket.entity.{DependServiceVo, DeployRequest, DeployVo, SyncNetworkVo}
 import com.github.dapeng.socket.enums.EventType
 import com.github.dapeng.socket.util.IPUtils
 import com.google.gson.Gson
@@ -203,6 +203,13 @@ object Main {
     }).on(EventType.WEB_LEAVE.name, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
         LOGGER.info(":::web node leave")
+      }
+    }).on(EventType.SYNC_NETWORK.name, new Emitter.Listener {
+      override def call(objects: AnyRef*): Unit = {
+        val deployVoJson = objects(0).asInstanceOf[String]
+        val vo = gson.fromJson(deployVoJson, classOf[SyncNetworkVo])
+        val cmd = s"${EventType.SYNC_NETWORK_RESP.name} ${vo.getNetworkName} ${vo.getDriver} ${vo.getSubnet} ${vo.getOpt}"
+        queue.put(cmd)
       }
     })
     socketClient.connect()

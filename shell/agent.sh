@@ -76,6 +76,20 @@ getYamlFile() {
    cat $1
 }
 
+syncNetworkResp() {
+  ip=$(ifconfig en0|grep "inet "|awk '{print $2}')
+  networkName="$1"
+  driver="$2"
+  subnet="$3"
+  opt="$4"
+  docker network create -d=$driver --subnet=$subnet -o=$opt $networkName
+  if [ $? -ne 0 ]; then
+    echo   "\033[31m $ip create network $networkName fail \033[0m"
+  else
+    echo  "\033[32m $ip create network $networkName success \033[0m"
+  fi
+}
+
 build() {
     echo "build runing..."
     echo "ori cmd: $@"
@@ -191,6 +205,6 @@ build() {
 
 
 case $1 in
-   "getServerInfoResp" | "build" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp") eval $@ ;;
+   "getServerInfoResp" | "build" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp" | "syncNetworkResp") eval $@ ;;
    *) echo "invalid command $1" ;;
 esac
