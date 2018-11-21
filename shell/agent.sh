@@ -84,9 +84,9 @@ syncNetworkResp() {
   opt="$4"
   docker network create -d=$driver --subnet=$subnet -o=$opt $networkName
   if [ $? -ne 0 ]; then
-    echo   "\033[31m $ip create network $networkName fail \033[0m"
+    echo -e  "\033[31m $ip create network $networkName fail \033[0m"
   else
-    echo  "\033[32m $ip create network $networkName success \033[0m"
+    echo -e "\033[32m $ip create network $networkName success \033[0m"
   fi
 }
 
