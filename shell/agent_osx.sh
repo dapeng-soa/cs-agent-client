@@ -91,20 +91,41 @@ syncNetworkResp() {
 }
 
 build() {
-       echo "build runing..."
-    echo "ori cmd: $@"
-    echo "serviceName: $1"
-    echo "projectUrl: $2"
-    echo "serviceBranch: $3"
+    # build info start
+    serviceName=$1
+    projectUrl=$2
+    serviceBranch=$3
+    echo -e "\033[33mbuild service [$serviceName] [$serviceBranch] start... \033[0m"
+    echo -e "\033[32mbuild info=======================================start \033[0m"
+    echo "|"
+    echo "| ori cmd: [$@]"
+    echo "| serviceName: [$serviceName]"
+    echo "| projectUrl: [$projectUrl]"
+    echo "| serviceBranch: [$serviceBranch]"
     cmd=`echo ${@:4}`
-    echo "cmd: $cmd"
+    echo "| cmd: [$cmd]"
     projectRootName=`echo ${2##*/} | cut -d . -f 1`
-    echo "projectGitName: "$projectRootName
+    echo "| projectGitName: [$projectRootName]|"
     WORKSPACE=`echo $COMPOSE_WORKSPACE`
-    AGENT_PWD=`echo $AGENT_HOME`
+    AGENT_PWD=`echo $AGENT_PATH`
+    echo "| env WORKSPACE : [$WORKSPACE]|"
+    echo "| env AGENT_HOME : [$AGENT_PWD]"
+    echo "|"
+    echo -e "\033[32mbuild info=======================================end \033[0m"
+    # build info end
+    # check start
+
     if [ ! -d "$WORKSPACE" ];
     then
-        echo "目录不存在: $WORKSPACE, 退出"
+        echo -e  "\033[31m 目录不存在，请添加COMPOSE_WORKSPACE环境变量指定代码空间: $WORKSPACE, 退出 \033[0m"
+        echo $serviceName" BUILD_END:1"
+        return 1
+    fi
+
+    if [ ! -d "$AGENT_PWD" ];
+    then
+        echo -e  "\033[31m 目录不存在,请添加AGENT_HOME环境变量指定agent目录: $AGENT_PWD, 退出 \033[0m"
+        echo $serviceName" BUILD_END:1"
         return 1
     fi
 
@@ -112,53 +133,18 @@ build() {
     if [ ! -d $projectRootName ];
     then
         echo "项目不存在, 拉取项目: $2"
-        git clone $2
+        git clone $projectUrl
+        if [ $? -ne 0 ]; then
+          echo -e "\033[31mclone faild \033[0m"
+          echo $serviceName" BUILD_END:1"
+          return 1
+        fi
     else
         echo "项目已存在, 执行构建指令"
     fi
 
-    cd $WORKSPACE/$projectRootName
-    echo "当前项目目录: `pwd` ,agent目录: `echo $AGENT_HOME`"
-    #判断cmd是否包含api指令，有的话，需要更新.build_api.cache.ini, 否则更新.build.cache.ini
-    echo "执行指令: $cmd"
-    if [[ $cmd =~ "api" ]];
-    then
-        echo "指令包含api，更新.build_api.cache.ini"
-        #fixme, 添加环境变量
+    # check end
         cd $AGENT_PWD
-        if [ ! -f ".build_api.cache.ini" ];
-        then
-            echo ".build_api.cache.ini 文件不存在, 新建"
-            touch .build_api.cache.ini
-        else
-            echo ".build_api.cache.ini 文件已存在"
-        fi
-
-        oldGitId=`cat .build_api.cache.ini | grep $1 | awk -F "=" '{print $2}'`
-
-        cd $WORKSPACE/$projectRootName
-        newGitId=`git rev-parse --short HEAD`
-        echo 'oldGitId: '$oldGitId', newGitId: '$newGitId
-        if [ $newGitId = $oldGitId ];
-        then
-            echo "gitId 一致，不需要重新构建，跳过..."
-            BUILD_STATUS=$?
-        else
-            #remove service old gitid
-            #cd $AGENT_HOME
-            #echo "gitId不一致, 删除旧的gitid, 重新构建"
-            #sed -i "/^$1/d" .build_api.cache.ini
-            #add service new gitid at last line of .build_api.cache.ini
-            #echo "$1=$newGitId" >> .build_api.cache.ini
-
-            cd $COMPOSE_WORKSPACE
-            echo "执行指令: $cmd"
-            $cmd
-            BUILD_STATUS=$?
-        fi
-    else
-        echo "不包含api"
-        cd $AGENT_HOME
         if [ ! -f ".build.cache.ini" ];
         then
             echo ".build.cache.ini 文件不存在，新建"
@@ -169,7 +155,12 @@ build() {
 
         oldGitId=`cat .build.cache.ini | grep $1 | awk -F "=" '{print $2}'`
         cd $WORKSPACE/$projectRootName
-        newGitId=`git rev-parse --short HEAD`
+        echo -e "\033[32mupdate [$serviceName] code:::branch [$serviceBranch]================================================start \033[0m"
+        git pull
+        git checkout $serviceBranch
+        git pull
+        newGitId=`git rev-parse --short=7 HEAD`
+        echo -e "\033[32mupdate [$serviceName] code:::branch [$serviceBranch]:::[$newGitId]====================================end \033[0m"
         echo 'oldGitId: '$oldGitId', newGitId: '$newGitId
         if [ "$newGitId" = "$oldGitId" ];
         then
@@ -183,17 +174,15 @@ build() {
             #add service new gitid at last line of .build.cache.ini
             #echo "$1=$newGitId" >> .build.cache.ini
 
-            cd $COMPOSE_WORKSPACE/$projectRootName
             echo "执行指令: $cmd"
             $cmd
 	    BUILD_STATUS=$?
         fi
-    fi
     if [ $BUILD_STATUS = 0 ];
     then
         #remove service old gitid
-        echo "构建成功，更新gitid"
-        cd $AGENT_HOME
+        echo -e "\033[32m构建成功，更新gitid \033[0m"
+        cd $AGENT_PWD
         sed -i "/^$1/d" .build.cache.ini
         #add service new gitid at last line of .build.cache.ini
         echo "$1=$newGitId" >> .build.cache.ini
@@ -202,7 +191,6 @@ build() {
     fi
     echo $1" BUILD_END:$BUILD_STATUS"
 }
-
 
 case $1 in
    "getServerInfoResp" | "build" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp" | "syncNetworkResp") eval $@ ;;
