@@ -69,6 +69,18 @@ restartResp() {
   fi
 }
 
+rmContainerResp() {
+   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
+  echo $@
+   echo -e "\033[33m $ip rm Container $1 \033[0m"
+  docker rm $1
+  if [ $? -ne 0 ]; then
+    echo -e  "\033[31m rm Container $1 fail \033[0m"
+  else
+    echo -e "\033[32m rm Container $1 success \033[0m"
+  fi
+}
+
 getYamlFileResp() {
    cat $1
 }
@@ -195,6 +207,6 @@ build() {
 
 
 case $1 in
-   "getServerInfoResp" | "build" | "deployResp" | "stopResp" | "restartResp" | "getYamlFile" |"getYamlFileResp" | "syncNetworkResp") eval $@ ;;
+   "getServerInfoResp" | "build" | "deployResp" | "stopResp" | "restartResp" | "rmContainerResp" | "getYamlFile" |"getYamlFileResp" | "syncNetworkResp") eval $@ ;;
    *) echo "invalid command $1" ;;
 esac

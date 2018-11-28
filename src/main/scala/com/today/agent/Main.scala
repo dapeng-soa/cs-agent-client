@@ -211,6 +211,13 @@ object Main {
         val cmd = s"${EventType.SYNC_NETWORK_RESP.name} ${vo.getNetworkName} ${vo.getDriver} ${vo.getSubnet} ${vo.getOpt}"
         queue.put(cmd)
       }
+    }).on(EventType.RM_CONTAINER.name, new Emitter.Listener {
+      override def call(objects: AnyRef*): Unit = {
+        val deployVoJson = objects(0).asInstanceOf[String]
+        val deployRequest = gson.fromJson(deployVoJson, classOf[DeployRequest])
+        val cmd = s"${EventType.RM_CONTAINER_RESP.name} ${deployRequest.getServiceName}"
+        queue.put(cmd)
+      }
     })
     socketClient.connect()
   }
