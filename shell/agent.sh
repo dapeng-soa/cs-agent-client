@@ -35,13 +35,16 @@ deployResp() {
 
   if [ ! -f "$ymlFile" ]; then
     echo "找不到对应的$ymlFile"
+    return 1
   else
     docker-compose -p $serviceName -f $ymlFile up -d
     if [ $? -ne 0 ]; then
         echo -e "\033[31m update $serviceName failed \033[0m"
         echo -e "\033[33m done \033[0m"
+        return 1
     else
         echo -e "\033[32m update successful!!! \033[0m"
+        return 0
     fi
   fi
 }
@@ -53,8 +56,10 @@ stopResp() {
   docker stop $1
   if [ $? -ne 0 ]; then
     echo -e  "\033[31m stop $1 fail \033[0m"
+    return 1
   else
     echo -e "\033[32m stop $1 success \033[0m"
+    return 0
   fi
 }
 
@@ -64,8 +69,10 @@ restartResp() {
   docker restart $1
   if [ $? -ne 0 ]; then
     echo -e  "\033[31m restart $1 fail \033[0m"
+    return 1
   else
     echo -e "\033[32m restart $1 success \033[0m"
+    return 0
   fi
 }
 
@@ -76,8 +83,10 @@ rmContainerResp() {
   docker rm $1
   if [ $? -ne 0 ]; then
     echo -e  "\033[31m rm Container $1 fail \033[0m"
+    return 1
   else
     echo -e "\033[32m rm Container $1 success \033[0m"
+    return 0
   fi
 }
 
@@ -97,8 +106,10 @@ syncNetworkResp() {
   docker network create -d=$driver --subnet=$subnet -o=$opt $networkName
   if [ $? -ne 0 ]; then
     echo -e  "\033[31m $ip create network $networkName fail \033[0m"
+    return 1
   else
     echo -e "\033[32m $ip create network $networkName success \033[0m"
+    return 0
   fi
 }
 
@@ -107,14 +118,18 @@ build() {
 	serviceName=$1
 	projectUrl=$2
 	serviceBranch=$3
+	imageName=$4
+	realService=$5
+	cmd=`echo ${@:6}`
 	echo -e "\033[33mbuild service [$serviceName] [$serviceBranch] start... \033[0m"
 	echo -e "\033[32mbuild info=======================================start \033[0m"
 	echo "|"
+	echo "| build realService:[$realService]"
 	echo "| ori cmd: [$@]"
 	echo "| serviceName: [$serviceName]"
+	echo "| imageName: [$imageName]"
 	echo "| projectUrl: [$projectUrl]"
 	echo "| serviceBranch: [$serviceBranch]"
-	cmd=`echo ${@:4}`
 	echo "| cmd: [$cmd]"
 	projectRootName=`echo ${2##*/} | cut -d . -f 1`
 	echo "| projectGitName: [$projectRootName]|"
@@ -144,7 +159,7 @@ build() {
 	cd $WORKSPACE
 	if [ ! -d $projectRootName ];
 	then
-		echo "项目不存在, 拉取项目: $2"
+		echo "项目不存在, 拉取项目: $projectUrl"
 		git clone $projectUrl
 		if [ $? -ne 0 ]; then
 			echo -e "\033[31mclone faild \033[0m"
@@ -163,9 +178,10 @@ build() {
 		touch .build.cache.ini
 	else
 		echo ".build.cache.ini 文件已存在"
+		cat .build.cache.ini
 	fi
 
-	oldGitId=`cat .build.cache.ini | grep $1 | awk -F "=" '{print $2}'`
+	oldGitId=`cat .build.cache.ini | grep $serviceName | awk -F "=" '{print $2}'`
 	cd $WORKSPACE/$projectRootName
 	echo -e "\033[32mupdate [$serviceName] code:::branch [$serviceBranch]================================================start \033[0m"
 	git pull
@@ -196,9 +212,35 @@ build() {
 	    #remove service old gitid
 	    echo -e "\033[32m构建成功，更新gitid \033[0m"
 	    cd $AGENT_PWD
-	    sed -i "/^$1/d" .build.cache.ini
+	    sed -i "/^$serviceName/d" .build.cache.ini
 	    #add service new gitid at last line of .build.cache.ini
-	    echo "$1=$newGitId" >> .build.cache.ini
+	    echo "$serviceName=$newGitId" >> .build.cache.ini
+
+        echo -e "\033[32m tag to latest image \033[0m"
+        echo "[$imageName:$newGitId => $imageName:latest]"
+	    ## tag to latest images
+	    docker tag $imageName:$newGitId $imageName:latest
+
+	    echo -e "=================<"
+	    docker images | grep $(docker images | grep $imageName | grep $newGitId | awk '{print$3}')
+	    echo -e "=================<"
+
+	    ## if is realService ,deploy service
+	    if [ "$serviceName" = "$realService" ]; then
+	      echo -e "\033[32mbuild is realService , deploy realService \033[0m"
+	      res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
+	      if [ $? -ne 0 ]; then
+	        echo $res
+			echo -e "\033[31mdeploy faild \033[0m"
+			echo $serviceName" BUILD_END:1"
+			return 1
+		  else
+            echo $res
+            echo -e "\033[32mdeploy service $serviceName successful\033[0m"
+		  fi
+		else
+		  echo -e "\033[33m[$serviceName] not is realService , skip deploy\033[0m"
+	    fi
 	else
 		echo "构建失败， 跳过更新gitid"
 	fi

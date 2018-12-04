@@ -3,11 +3,10 @@ package com.today.agent
 import java.io.{File, FileWriter}
 import java.util.concurrent.LinkedBlockingQueue
 
-import com.github.dapeng.socket.entity.{DependServiceVo, DeployRequest, DeployVo, SyncNetworkVo}
+import com.github.dapeng.socket.entity._
 import com.github.dapeng.socket.enums.EventType
 import com.github.dapeng.socket.util.IPUtils
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.today.agent.client.CmdExecutor
 import com.today.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
@@ -71,17 +70,12 @@ object Main {
     }).on(EventType.BUILD.name, new Emitter.Listener {
       override def call(args: AnyRef*): Unit = {
         val buildJson = args(0).asInstanceOf[String]
-        val request: java.util.List[DependServiceVo] = gson.fromJson(buildJson, new TypeToken[java.util.List[DependServiceVo]]() {
-        }.getType)
-        request.asScala.foreach(vo => {
-          /*
-          * echo "ori cmd: $@"
-          * echo "serviceName: $1"
-          * echo "projectUrl: $2"
-          * echo "serviceBranch: $3"
-          * cmd=`echo ${@:4}`
-          */
-          val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getBuildOperation}"
+        val buildVo = gson.fromJson(buildJson, classOf[BuildVo])
+        /*val request: java.util.List[DependServiceVo] = gson.fromJson(buildJson, new TypeToken[java.util.List[DependServiceVo]]() {
+        }.getType)*/
+        buildVo.getBuildServices.asScala.foreach(vo => {
+          // 依赖服务名 依赖服务git地址 依赖服务分支名 依赖服务构建脚本 依赖项目的基础镜像  真正需要构建(发布)的服务
+          val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getImageName} ${buildVo.getBuildService} ${vo.getBuildOperation}"
           LOGGER.info(s" start to execute cmd: ${cmd}")
           queue.add(cmd)
         })
