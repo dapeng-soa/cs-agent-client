@@ -273,21 +273,32 @@ remoteDeployResp(){
   serviceName=$4
   imageName=$5
   imageTag=$6
-  WORKSPACE=`echo $COMPOSE_WORKSPACE`
   AGENT_PWD=`echo $AGENT_PATH`
   # 标示来源的节点地址
   sourceHostPre=":::[SOURCE_HOST]:::$sourceIp"
 
+  echo -e "\033[33mdeploy service [$serviceName] on [$deployHost] start... \033[0m$sourceHostPre"
+  echo -e "\033[32mdeploy info=======================================start \033[0m$sourceHostPre"
+  echo "|buildId: [$buildId]$sourceHostPre"
+  echo "|sourceIp: [$sourceIp]$sourceHostPre"
+  echo "|deployHost: [$deployHost]$sourceHostPre"
+  echo "|serviceName: [$serviceName]$sourceHostPre"
+  echo "|imageName: [$imageName]$sourceHostPre"
+  echo "|imageTag: [$imageTag]$sourceHostPre"
+  echo "|env AGENT_PATH: [$AGENT_PWD]$sourceHostPre"
+  echo -e "\033[32mdeploy info=======================================end \033[0m$sourceHostPre"
 
   # pull image
-  docker pull $imageName:$imageTag
+  echo "pull image $imageName:$imageTag start $sourceHostPre"
+  pullResp=$(docker pull $imageName:$imageTag 2>&1)
+  echo "$pullResp$sourceHostPre"
   # to latest
-  echo "deploy on [$deployHost] $sourceHostPre"
   echo "tag to latest image $sourceHostPre"
   echo "[$imageName:$imageTag => $imageName:latest]$sourceHostPre"
   ## tag to latest images
   docker tag $imageName:$imageTag $imageName:latest
-  docker images | grep $(docker images | grep $imageName | grep $imageTag | awk '{print$3}')
+  images=$(docker images | grep $(docker images | grep $imageName | grep $imageTag | awk '{print$3}') 2>&1)
+  echo "$images$sourceHostPre"
   ## deploy
   res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
   if [ $? -ne 0 ]; then
