@@ -73,7 +73,7 @@ object Main {
         val buildVo = gson.fromJson(buildJson, classOf[BuildVo])
         buildVo.getBuildServices.asScala.foreach(vo => {
           // 依赖服务名 依赖服务git地址 依赖服务分支名 依赖服务构建脚本 依赖项目的基础镜像  真正需要构建(发布)的服务
-          val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getImageName} ${buildVo.getBuildService} ${buildVo.getDeployHost} ${vo.getBuildOperation}"
+          val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getImageName} ${buildVo.getBuildService} ${buildVo.getDeployHost} ${buildVo.getId} ${vo.getBuildOperation}"
           LOGGER.info(s" start to execute cmd: ${cmd}")
           queue.add(cmd)
         })
@@ -208,6 +208,19 @@ object Main {
         val deployVoJson = objects(0).asInstanceOf[String]
         val deployRequest = gson.fromJson(deployVoJson, classOf[DeployRequest])
         val cmd = s"${EventType.RM_CONTAINER_RESP.name} ${deployRequest.getServiceName}"
+        queue.put(cmd)
+      }
+    }).on(EventType.REMOTE_DEPLOY.name, new Emitter.Listener {
+      override def call(objects: AnyRef*): Unit = {
+        val data = objects(0).asInstanceOf[String]
+        val info = data.split(":")
+        val buildId = info(1)
+        val sourceIp = info(2)
+        val deployHost = info(3)
+        val serviceName = info(4)
+        val imageName = info(5)
+        val imageTag = info(6)
+        val cmd = s"${EventType.REMOTE_DEPLOY_RESP.name} $buildId $sourceIp $deployHost $serviceName $imageName $imageTag"
         queue.put(cmd)
       }
     })
