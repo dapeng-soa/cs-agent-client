@@ -71,11 +71,9 @@ object Main {
       override def call(args: AnyRef*): Unit = {
         val buildJson = args(0).asInstanceOf[String]
         val buildVo = gson.fromJson(buildJson, classOf[BuildVo])
-        /*val request: java.util.List[DependServiceVo] = gson.fromJson(buildJson, new TypeToken[java.util.List[DependServiceVo]]() {
-        }.getType)*/
         buildVo.getBuildServices.asScala.foreach(vo => {
           // 依赖服务名 依赖服务git地址 依赖服务分支名 依赖服务构建脚本 依赖项目的基础镜像  真正需要构建(发布)的服务
-          val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getImageName} ${buildVo.getBuildService} ${vo.getBuildOperation}"
+          val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getImageName} ${buildVo.getBuildService} ${buildVo.getDeployHost} ${vo.getBuildOperation}"
           LOGGER.info(s" start to execute cmd: ${cmd}")
           queue.add(cmd)
         })

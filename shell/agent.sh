@@ -120,11 +120,13 @@ build() {
 	serviceBranch=$3
 	imageName=$4
 	realService=$5
-	cmd=`echo ${@:6}`
+	deployHost=$6
+	cmd=`echo ${@:7}`
 	echo -e "\033[33mbuild service [$serviceName] [$serviceBranch] start... \033[0m"
 	echo -e "\033[32mbuild info=======================================start \033[0m"
 	echo "|"
 	echo "| build realService:[$realService]"
+	echo "| deployHost: [$deployHost]"
 	echo "| ori cmd: [$@]"
 	echo "| serviceName: [$serviceName]"
 	echo "| imageName: [$imageName]"
@@ -151,7 +153,7 @@ build() {
 
 	if [ ! -d "$AGENT_PWD" ];
 	then
-		echo -e  "\033[31m 目录不存在,请添加AGENT_HOME环境变量指定agent目录: $AGENT_PWD, 退出 \033[0m"
+		echo -e  "\033[31m 目录不存在,请添加AGENT_PATH环境变量指定agent目录: $AGENT_PWD, 退出 \033[0m"
 		echo $serviceName" BUILD_END:1"
 		return 1
 	fi
