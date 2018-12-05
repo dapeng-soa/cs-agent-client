@@ -252,7 +252,7 @@ build() {
 	        # 如何将服务部署指令发送到其他主机？
 	        # 1.已标准输出返回给客户端，客户端根据关键字发送事件
 	        # 标示关键字:源ip:部署节点:部署的服务:镜像名:最新的tag号
-	        echo "[REMOTE_DEPLOY]:$buildId:$ip:$deployHost:$serviceName:$imageName:$newGitId"
+	        echo "[REMOTE_DEPLOY]:::$buildId:::$ip:::$deployHost:::$serviceName:::$imageName:::$newGitId"
 	        echo "waiting deploy"
 	        # 如果是远程部署，先把当前脚本停止，使其BUILD_END状态不被改变
 	        return 1
@@ -275,28 +275,29 @@ remoteDeployResp(){
   imageTag=$6
   WORKSPACE=`echo $COMPOSE_WORKSPACE`
   AGENT_PWD=`echo $AGENT_PATH`
+  # 标示来源的节点地址
+  sourceHostPre=":::[SOURCE_HOST]:::$sourceIp"
 
 
   # pull image
   docker pull $imageName:$imageTag
   # to latest
-  echo -e "\033[32m tag to latest image \033[0m"
-  echo "[$imageName:$imageTag => $imageName:latest]"
+  echo "deploy on [$deployHost] $sourceHostPre"
+  echo "tag to latest image $sourceHostPre"
+  echo "[$imageName:$imageTag => $imageName:latest]$sourceHostPre"
   ## tag to latest images
   docker tag $imageName:$imageTag $imageName:latest
-  echo -e "=================<"
   docker images | grep $(docker images | grep $imageName | grep $imageTag | awk '{print$3}')
-  echo -e "=================<"
   ## deploy
   res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
   if [ $? -ne 0 ]; then
-    echo $res
-    echo -e "\033[31mdeploy faild \033[0m"
+    echo $res $sourceHostPre
+    echo -e "\033[31mdeploy faild \033[0m$sourceHostPre"
     echo $serviceName" [REMOTE_DEPLOY_END]:1:$buildId:$sourceIp"
     return 1
   else
     echo $res
-    echo -e "\033[32mdeploy service $serviceName successful\033[0m"
+    echo -e "\033[32mdeploy service $serviceName successful\033[0m$sourceHostPre"
     echo $serviceName" [REMOTE_DEPLOY_END]:0:$buildId:$sourceIp"
     return 0
   fi

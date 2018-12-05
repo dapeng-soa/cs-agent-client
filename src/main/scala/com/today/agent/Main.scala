@@ -213,7 +213,7 @@ object Main {
     }).on(EventType.REMOTE_DEPLOY.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
         val data = objects(0).asInstanceOf[String]
-        val info = data.split(":")
+        val info = data.split(":::")
         val buildId = info(1)
         val sourceIp = info(2)
         val deployHost = info(3)
