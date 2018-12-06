@@ -37,13 +37,16 @@ deployResp() {
     echo "找不到对应的$ymlFile"
     return 1
   else
-    docker-compose -p $serviceName -f $ymlFile up -d
+    res=$(docker-compose -p $serviceName -f $ymlFile up -d 2>&1)
     if [ $? -ne 0 ]; then
+        echo "$res"
         echo -e "\033[31m update $serviceName failed \033[0m"
         echo -e "\033[33m done \033[0m"
         return 1
     else
+        echo "$res"
         echo -e "\033[32m update successful!!! \033[0m"
+        echo -e "\033[33m done \033[0m"
         return 0
     fi
   fi
