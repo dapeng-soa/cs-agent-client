@@ -284,13 +284,18 @@ remoteDeployResp(){
   echo "$images"|sed 's/$/&'"$sourceHostPre"'/g'
   ## deploy
   res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
+  pss=$(docker ps | grep -w "$serviceName$" 2>&1)
   if [ $? -ne 0 ]; then
     echo "$res" |sed 's/$/&'"$sourceHostPre"'/g'
     echo -e "\033[31mdeploy faild \033[0m$sourceHostPre"
+    echo -e "\033[32m=========> run info\033[0m$sourceHostPre"
+    echo "$pss" | sed 's/$/&'"$sourceHostPre"'/g'
     echo $serviceName" [REMOTE_DEPLOY_END]:1:$buildId:$sourceIp"
     return 1
   else
     echo "$res" |sed 's/$/&'"$sourceHostPre"'/g'
+    echo -e "\033[32m=========> run info\033[0m$sourceHostPre"
+    echo "$pss" | sed 's/$/&'"$sourceHostPre"'/g'
     echo -e "\033[32mdeploy service $serviceName successful\033[0m$sourceHostPre"
     echo $serviceName" [REMOTE_DEPLOY_END]:0:$buildId:$sourceIp"
     return 0
