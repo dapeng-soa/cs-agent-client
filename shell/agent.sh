@@ -127,6 +127,7 @@ build() {
 	echo -e "\033[33mbuild service [$serviceName] [$serviceBranch] start... \033[0m"
 	echo -e "\033[32mbuild info=======================================start \033[0m"
 	echo "|"
+	echo "| buildId: [$buildId]"
 	echo "| build realService:[$realService]"
 	echo "| clientIp: [$ip]"
 	echo "| deployHost: [$deployHost]"
@@ -226,37 +227,16 @@ build() {
 
 	      echo -e "\033[32mbuild is realService , deploy realService \033[0m"
 	      ## 如果 deployHost 与clientIp 不同，则需要将此次发布任务提交委托给其他机器
-	      if [ "$ip" = "$deployHost" ]; then
-	       echo -e "\033[32m tag to latest image \033[0m"
-           echo "[$imageName:$newGitId => $imageName:latest]"
-           ## tag to latest images
-           docker tag $imageName:$newGitId $imageName:latest
-           echo -e "=================<"
-           docker images | grep $(docker images | grep $imageName | grep $newGitId | awk '{print$3}')
-           echo -e "=================<"
-
-	       res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
-            if [ $? -ne 0 ]; then
-              echo "$res"
-              echo -e "\033[31mdeploy faild \033[0m"
-              echo $serviceName" BUILD_END:1"
-              return 1
-            else
-              echo "$res"
-              echo -e "\033[32mdeploy service $serviceName successful\033[0m"
-		    fi
-	      else
-	        # 如果是远程服务器部署，需要推送镜像,不推送latest镜像,直接推送新的tag镜像，由远程自行打tag为latest
-	        echo -e "\033[32mdocker push $imageName:$newGitId start\033[0m"
-	        docker push $imageName:$newGitId
-	        # 如何将服务部署指令发送到其他主机？
-	        # 1.已标准输出返回给客户端，客户端根据关键字发送事件
-	        # 标示关键字:源ip:部署节点:部署的服务:镜像名:最新的tag号
-	        echo "[REMOTE_DEPLOY]:::$buildId:::$ip:::$deployHost:::$serviceName:::$imageName:::$newGitId"
-	        echo "waiting deploy"
-	        # 如果是远程部署，先把当前脚本停止，使其BUILD_END状态不被改变
-	        return 1
-	      fi
+	      # 如果是远程服务器部署，需要推送镜像,不推送latest镜像,直接推送新的tag镜像，由远程自行打tag为latest
+	      echo -e "\033[32mdocker push $imageName:$newGitId start\033[0m"
+	      docker push $imageName:$newGitId
+	      # 如何将服务部署指令发送到其他主机？
+	      # 1.已标准输出返回给客户端，客户端根据关键字发送事件
+	      # 标示关键字:源ip:部署节点:部署的服务:镜像名:最新的tag号
+	      echo "[REMOTE_DEPLOY]:::$buildId:::$ip:::$deployHost:::$serviceName:::$imageName:::$newGitId"
+	      echo "waiting deploy"
+	      # 如果是远程部署，先把当前脚本停止，使其BUILD_END状态不被改变
+	      return 1
 		else
 		  echo -e "\033[33m[$serviceName] not is realService , skip deploy\033[0m"
 	    fi
