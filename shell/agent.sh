@@ -237,12 +237,12 @@ build() {
 
 	       res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
             if [ $? -ne 0 ]; then
-              echo $res
+              echo "$res"
               echo -e "\033[31mdeploy faild \033[0m"
               echo $serviceName" BUILD_END:1"
               return 1
             else
-              echo $res
+              echo "$res"
               echo -e "\033[32mdeploy service $serviceName successful\033[0m"
 		    fi
 	      else
@@ -289,25 +289,25 @@ remoteDeployResp(){
   echo -e "\033[32mdeploy info=======================================end \033[0m$sourceHostPre"
 
   # pull image
-  echo "pull image $imageName:$imageTag start $sourceHostPre"
+  echo -e "\033[32mpull image $imageName:$imageTag start \033[0m$sourceHostPre"
   pullResp=$(docker pull $imageName:$imageTag 2>&1)
-  echo "$pullResp$sourceHostPre"
+  echo "$pullResp"|sed 's/$/&'"$sourceHostPre"'/g'
   # to latest
-  echo "tag to latest image $sourceHostPre"
+  echo -e "\033[32mtag to latest image\033[0m $sourceHostPre"
   echo "[$imageName:$imageTag => $imageName:latest]$sourceHostPre"
   ## tag to latest images
   docker tag $imageName:$imageTag $imageName:latest
   images=$(docker images | grep $(docker images | grep $imageName | grep $imageTag | awk '{print$3}') 2>&1)
-  echo "$images$sourceHostPre"
+  echo "$images"|sed 's/$/&'"$sourceHostPre"'/g'
   ## deploy
   res=$(deployResp $serviceName $AGENT_PWD/yamlDir/$serviceName.yml 2>&1)
   if [ $? -ne 0 ]; then
-    echo $res $sourceHostPre
+    echo "$res" |sed 's/$/&'"$sourceHostPre"'/g'
     echo -e "\033[31mdeploy faild \033[0m$sourceHostPre"
     echo $serviceName" [REMOTE_DEPLOY_END]:1:$buildId:$sourceIp"
     return 1
   else
-    echo $res
+    echo "$res" |sed 's/$/&'"$sourceHostPre"'/g'
     echo -e "\033[32mdeploy service $serviceName successful\033[0m$sourceHostPre"
     echo $serviceName" [REMOTE_DEPLOY_END]:0:$buildId:$sourceIp"
     return 0
