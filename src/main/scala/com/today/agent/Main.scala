@@ -1,7 +1,7 @@
 package com.today.agent
 
 import java.io.{File, FileWriter}
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.{Executors, LinkedBlockingQueue}
 
 import com.github.dapeng.socket.entity._
 import com.github.dapeng.socket.enums.EventType
@@ -56,7 +56,14 @@ object Main {
     val socketClient: Socket = IO.socket(serverUrl)
 
     val queue = new LinkedBlockingQueue[String]()
+    val deployQueue = new LinkedBlockingQueue[String]()
     val cmdExecutor = new CmdExecutor(queue, socketClient)
+    val deployExecutor = new CmdExecutor(deployQueue, socketClient)
+
+    val threads = Executors.newFixedThreadPool(2)
+
+    threads.execute(cmdExecutor)
+    threads.execute(deployExecutor)
 
     new Thread(cmdExecutor).start()
 
@@ -168,7 +175,7 @@ object Main {
 
         //exec cmd.....
         val cmd = s"${EventType.DEPLOY_RESP.name} ${vo.getServiceName}  ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml"
-        queue.put(cmd)
+        deployQueue.put(cmd)
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
