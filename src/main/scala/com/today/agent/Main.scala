@@ -56,9 +56,9 @@ object Main {
     val socketClient: Socket = IO.socket(serverUrl)
 
     val queue = new LinkedBlockingQueue[String]()
-    val deployQueue = new LinkedBlockingQueue[String]()
+    val buildQueue = new LinkedBlockingQueue[String]()
     val cmdExecutor = new CmdExecutor(queue, socketClient)
-    val deployExecutor = new CmdExecutor(deployQueue, socketClient)
+    val deployExecutor = new CmdExecutor(buildQueue, socketClient)
 
     val threads = Executors.newFixedThreadPool(2)
 
@@ -82,7 +82,7 @@ object Main {
           // 依赖服务名 依赖服务git地址 依赖服务分支名 依赖服务构建脚本 依赖项目的基础镜像  真正需要构建(发布)的服务
           val cmd = s"${EventType.BUILD.name} ${vo.getServiceName} ${vo.getGitURL} ${vo.getBranchName} ${vo.getImageName} ${buildVo.getBuildService} ${buildVo.getDeployHost} ${buildVo.getId} ${vo.getBuildOperation}"
           LOGGER.info(s" start to execute cmd: ${cmd}")
-          queue.add(cmd)
+          buildQueue.add(cmd)
         })
       }
 
@@ -175,7 +175,7 @@ object Main {
 
         //exec cmd.....
         val cmd = s"${EventType.DEPLOY_RESP.name} ${vo.getServiceName}  ${yamlDir.getAbsolutePath}/${vo.getServiceName}.yml"
-        deployQueue.put(cmd)
+        queue.put(cmd)
       }
     }).on(EventType.GET_YAML_FILE.name, new Emitter.Listener {
       override def call(objects: AnyRef*): Unit = {
@@ -228,7 +228,7 @@ object Main {
         val imageName = info(5)
         val imageTag = info(6)
         val cmd = s"${EventType.REMOTE_DEPLOY_RESP.name} $buildId $sourceIp $deployHost $serviceName $imageName $imageTag"
-        queue.put(cmd)
+        buildQueue.put(cmd)
       }
     })
     socketClient.connect()
