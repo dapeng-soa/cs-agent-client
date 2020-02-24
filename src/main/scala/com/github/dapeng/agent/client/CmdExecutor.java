@@ -1,4 +1,4 @@
-package com.today.agent.client;
+package com.github.dapeng.agent.client;
 
 import com.github.dapeng.socket.enums.EventType;
 import io.socket.client.Socket;

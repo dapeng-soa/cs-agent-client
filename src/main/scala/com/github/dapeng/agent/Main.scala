@@ -1,4 +1,4 @@
-package com.today.agent
+package com.github.dapeng.agent
 
 import java.io.{File, FileWriter}
 import java.util.concurrent.{Executors, LinkedBlockingQueue}
@@ -7,8 +7,8 @@ import com.github.dapeng.socket.entity._
 import com.github.dapeng.socket.enums.EventType
 import com.github.dapeng.socket.util.IPUtils
 import com.google.gson.Gson
-import com.today.agent.client.CmdExecutor
-import com.today.agent.listener.DeployServerOperations
+import com.github.dapeng.agent.client.CmdExecutor
+import com.github.dapeng.agent.listener.DeployServerOperations
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
 import org.slf4j.{Logger, LoggerFactory}
@@ -23,7 +23,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    var serverUrl = "http://10.0.75.1:6886" //http://127.0.0.1:6886
+    var serverUrl = "http://127.0.0.1:6886"
     val registerInfo = s"${IPUtils.nodeName}:${IPUtils.localIp}"
 
     if (args != null && args.length >= 1) {

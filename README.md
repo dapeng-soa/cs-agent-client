@@ -1,3 +1,6 @@
+# cs-agent-client
+[dapeng-config-server](https://github.com/dapeng-soa/dapeng-config-server) 的socket执行客户端，常部署在宿主机上接收指令
+
 ## 打包
 ```sbtshell
 sbt dist
