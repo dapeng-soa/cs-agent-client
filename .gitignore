@@ -4,3 +4,4 @@ target
 project/project
 *.log
 .DS_Store
+dist/agentClient
