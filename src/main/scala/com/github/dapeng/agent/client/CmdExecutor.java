@@ -24,7 +24,6 @@ public class CmdExecutor implements Runnable{
             while(true) {
                 try {
                     String  event = (String)queue.take();
-                    LOGGER.info("Consumed Event " + event);
 
                     String oriEvent = event.split(" ")[0];
 

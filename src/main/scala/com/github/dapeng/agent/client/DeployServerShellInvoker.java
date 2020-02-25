@@ -51,14 +51,14 @@ public class DeployServerShellInvoker {
             String inline;
             while ((inline = br.readLine()) != null) {
                 processInlineToSendEvent(event, socket, inline);
-                LOGGER.info(inline);
+                //LOGGER.info(inline);
             }
             br.close();
 
             br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((inline = br.readLine()) != null) {
                 processInlineToSendEvent(EventType.ERROR_EVENT().name(), socket, inline);
-                LOGGER.info(inline);
+                //LOGGER.info(inline);
             }
 
             if (process != null) {
