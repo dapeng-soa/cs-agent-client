@@ -1,15 +1,26 @@
 #!/bin/bash
-# run in Centos
+# run in Unix
+
+ip=$(ifconfig eth0 2>/dev/null|grep "inet "|awk '{print $2}')
+if [ ! $ip ];then
+ ip=$(ifconfig eno1 2>/dev/null|grep "inet "|awk '{print $2}')
+fi
+if [ ! $ip ];then
+ ip=$(ifconfig en0 2>/dev/null|grep "inet "|awk '{print $2}')
+fi
+
 getServerInfoResp(){
     if [ $# -lt 2 ];then
         echo "invalid cmd...please input your request [serviceName],[serviceName.yml]"
         exit 1
     fi
-   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
-
 
    if [ -e "$2" ];then
-        time=`stat -c %Y $2`
+        time=`stat -c %Y $2 2>/dev/null`
+        # macos
+        if [ ! $time ];then
+         time=`stat -f "%B %N" $2 | awk '{print$1}'`
+        fi
    else
         time=0
    fi
@@ -53,7 +64,6 @@ deployResp() {
 }
 
 stopResp() {
-  ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
   echo $@
    echo -e "\033[33m $ip stopping $1 \033[0m"
   docker stop $1
@@ -67,7 +77,6 @@ stopResp() {
 }
 
 restartResp() {
-   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
     echo -e "\033[33m $ip restarting $1 \033[0m"
   docker restart $1
   if [ $? -ne 0 ]; then
@@ -80,7 +89,6 @@ restartResp() {
 }
 
 rmContainerResp() {
-   ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
   echo $@
    echo -e "\033[33m $ip rm Container $1 \033[0m"
   docker rm $1
@@ -101,7 +109,6 @@ getYamlFile() {
 }
 
 syncNetworkResp() {
-  ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
   networkName="$1"
   driver="$2"
   subnet="$3"
@@ -118,7 +125,6 @@ syncNetworkResp() {
 
 build() {
 	# build info start
-	ip=$(ifconfig eth0|grep "inet "|awk '{print $2}')
 	serviceName=$1
 	projectUrl=$2
 	serviceBranch=$3
